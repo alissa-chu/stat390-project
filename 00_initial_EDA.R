@@ -9,14 +9,17 @@ tidymodels_prefer()
 # seed
 set.seed(3013)
 
-covid <- COVID_19_Vaccinations_in_the_United_States_Jurisdiction_20240111
+covid <- read_csv("data/COVID-19_Vaccinations_in_the_United_States_Jurisdiction_20240111.csv")
 
 skimr::skim(covid)
 
 # looking at missing data
 missing_table <- naniar::miss_var_summary(covid) %>% 
-  filter(pct_miss > 20) %>% 
+  # filter(pct_miss > 20) %>% 
   kbl() %>% 
   kable_classic()
 
 missing_table
+
+covid %>% 
+  select(Second_Booster)
