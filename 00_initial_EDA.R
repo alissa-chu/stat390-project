@@ -1,6 +1,9 @@
 # 00 initial exploratory data analysis
 library(tidymodels)
+<<<<<<< HEAD
 library(tidyverse)
+=======
+>>>>>>> 11e62aef7fe7a750866629dbcc253028993965b0
 library(kableExtra)
 library(corrplot)
 
@@ -10,6 +13,7 @@ tidymodels_prefer()
 # seed
 set.seed(3013)
 
+<<<<<<< HEAD
 vaccines <- read_csv("data/COVID-19_Vaccinations_in_the_United_States_Jurisdiction_20240111.csv")
 deaths <- read_csv("data/Provisional_COVID-19_Death_Counts_by_Week_Ending_Date_and_State_20240113.csv")
 
@@ -17,6 +21,9 @@ deaths <- deaths %>%
   mutate(Location = state.abb[match(State,state.name)])
 
 write_csv(deaths, file = "data/deaths_with_abbs.csv")
+=======
+covid <- read_csv("data/COVID-19_Vaccinations_in_the_United_States_Jurisdiction_20240111.csv")
+>>>>>>> 11e62aef7fe7a750866629dbcc253028993965b0
 
 skimr::skim(covid)
 
