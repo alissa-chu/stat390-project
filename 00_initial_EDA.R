@@ -1,9 +1,7 @@
 # 00 initial exploratory data analysis
 library(tidymodels)
-<<<<<<< HEAD
 library(tidyverse)
-=======
->>>>>>> 11e62aef7fe7a750866629dbcc253028993965b0
+
 library(kableExtra)
 library(corrplot)
 
