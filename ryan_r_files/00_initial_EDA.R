@@ -136,6 +136,15 @@ ggplot(deaths, aes(x = date, y = total_covid_deaths)) +
 
 
 ## LOOKING AT MERGED DATASET ---------------------------------------------------------
-covid_deaths <- read_csv("data/covid_deaths2.csv")
+covid_deaths <- read_csv("data/copy_covid_deaths2.csv")
 
+covid_deaths <- covid_deaths %>% 
+  janitor::clean_names() %>% 
+  select(-c("x1", "location", "date"))
+
+c1 <- cor(covid_deaths[90:119])
+
+c <- cor(covid_deaths)
+
+corrplot(c1, method = 'color')
 
