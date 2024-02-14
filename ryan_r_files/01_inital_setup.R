@@ -57,6 +57,15 @@ acf(date2)
 acf(deaths2)
 ?acf
 
+## Counting Obs Per Region
+mc %>% 
+  group_by(region) %>% 
+  count() %>% 
+  rename("# of Observations" = n) %>% 
+  kbl() %>% 
+  kable_styling()
+
+
 
 mc2 <- mc %>% 
   group_by(region, date.x) %>% 
@@ -65,6 +74,51 @@ mc2 <- mc %>%
   distinct(date.x, region_deaths, region)
 
 totes_deaths <- ggplot(mc2) +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-01-21"), xmax = as.Date("2021-01-31"), 
+                ymin = 00, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-04-21"), xmax = as.Date("2021-04-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-07-21"), xmax = as.Date("2021-07-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-10-21"), xmax = as.Date("2021-10-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-01-21"), xmax = as.Date("2022-01-31"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-04-21"), xmax = as.Date("2022-04-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-07-21"), xmax = as.Date("2021-07-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2020-10-21"), xmax = as.Date("2020-10-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2020-07-21"), xmax = as.Date("2020-07-31"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2020-04-21"), xmax = as.Date("2020-04-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-01-21"), xmax = as.Date("2022-01-31"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-10-21"), xmax = as.Date("2022-10-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+          aes(xmin = as.Date("2023-01-21"), xmax = as.Date("2023-01-31"), 
+              ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2023-04-21"), xmax = as.Date("2023-04-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-07-21"), xmax = as.Date("2022-07-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
   geom_line(aes(x = date.x, y = region_deaths, color = region)) +
   geom_point(aes(x = date.x, y = region_deaths, color = region), size = 0.2) +
   scale_x_date(date_breaks = '4 month', date_labels = '%b %y') +
@@ -74,6 +128,64 @@ totes_deaths <- ggplot(mc2) +
        y = "Total Deaths by Region",
        x = "Date",
        color = "Region")
+
+
+totes_deaths <- ggplot(mc2) +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-01-21"), xmax = as.Date("2021-01-31"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-04-21"), xmax = as.Date("2021-04-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-07-21"), xmax = as.Date("2021-07-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-10-21"), xmax = as.Date("2021-10-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-01-21"), xmax = as.Date("2022-01-31"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-04-21"), xmax = as.Date("2022-04-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-07-21"), xmax = as.Date("2021-07-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2020-10-21"), xmax = as.Date("2020-10-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2020-07-21"), xmax = as.Date("2020-07-31"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2020-04-21"), xmax = as.Date("2020-04-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-01-21"), xmax = as.Date("2022-01-31"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-10-21"), xmax = as.Date("2022-10-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2023-01-21"), xmax = as.Date("2023-01-31"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2023-04-21"), xmax = as.Date("2023-04-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-07-21"), xmax = as.Date("2022-07-30"), 
+                ymin = 12500, ymax = 0), fill = "blue") +
+  geom_line(aes(x = date.x, y = region_deaths, color = region)) +
+  geom_point(aes(x = date.x, y = region_deaths, color = region), size = 0.2) +
+  scale_x_date(date_breaks = '4 month', date_labels = '%b %y') +
+  theme(axis.text.x = element_text(angle = 25, vjust = 0.75),
+        plot.caption = element_text(vjust = 7)) +
+  labs(title = "Regional COVID-19 Deaths",
+       y = "Total Deaths by Region",
+       x = "Date",
+       color = "Region")
+  
 
 totes_deaths
 
@@ -139,6 +251,63 @@ total_deaths_plot <- ggplot(mc3) +
            65+ and other \n vulnerable populations", fontface = "bold")
 
 total_deaths_plot
+
+ggplot(mc3) +
+  geom_point(aes(x = date.x, y = total_deaths), size = 0.5) +
+  geom_line(aes(x = date.x, y = total_deaths)) +
+  scale_x_date(date_breaks = '4 month', date_labels = '%b %y') +
+  theme(axis.text.x = element_text(angle = 25, vjust = 0.75),
+        plot.caption = element_text(vjust = 7)) + 
+  labs(x = "Date",
+       y = "Total Deaths",
+       title = "Total Deaths by COVID-19 Over Time, with 3 Month Intervals") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-01-21"), xmax = as.Date("2021-01-31"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-04-21"), xmax = as.Date("2021-04-30"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-07-21"), xmax = as.Date("2021-07-30"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-10-21"), xmax = as.Date("2021-10-30"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-01-21"), xmax = as.Date("2022-01-31"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-04-21"), xmax = as.Date("2022-04-30"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2021-07-21"), xmax = as.Date("2021-07-30"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2020-10-21"), xmax = as.Date("2020-10-30"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2020-07-21"), xmax = as.Date("2020-07-31"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2020-04-21"), xmax = as.Date("2020-04-30"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-01-21"), xmax = as.Date("2022-01-31"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-10-21"), xmax = as.Date("2022-10-30"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2023-01-21"), xmax = as.Date("2023-01-31"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2023-04-21"), xmax = as.Date("2023-04-30"), 
+                ymin = 30000, ymax = 0), fill = "blue") +
+  geom_rect(alpha = 0.009,
+            aes(xmin = as.Date("2022-07-21"), xmax = as.Date("2022-07-30"), 
+                ymin = 30000, ymax = 0), fill = "blue")
+
+
 
 mc4 <- mc %>% 
   group_by(date.x, region) %>% 
@@ -292,6 +461,7 @@ mc2_2 %>%
   geom_line() +
   geom_smooth()
 
+
 univariate <- mc %>% 
   group_by(date.x) %>% 
   mutate(total_deaths = sum(covid_19_deaths)) %>% 
@@ -300,9 +470,43 @@ univariate <- mc %>%
   group_by(region) %>% 
   count()
 
+univariate %>% 
+  kbl() %>% 
+  kable_minimal()
+
 mc %>% 
   distinct(date.x) %>% 
   count()
+
+regions <- mc %>% 
+  group_by(date.x, region) %>% 
+  filter()
+  mutate(totes = sum(covid_19_deaths, na.rm = TRUE)) %>% 
+  distinct(date.x, totes, region)
+
+regions %>% 
+  ggplot(aes(x = totes, fill = region)) +
+  geom_histogram(color = 'black', show.legend = FALSE) +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Distribution of COVID-19 Deaths By Region",
+       x = "COVID-19 Deaths",
+       y = "Count") +
+  facet_wrap(~region) +
+  theme(strip.text = element_text(size = 12))
+
+regions %>% 
+  ggplot(aes(x = log(totes), fill = region)) +
+  geom_histogram(color = 'black', show.legend = FALSE) +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Distribution of COVID-19 Deaths By Region (Log-Transformed)",
+       x = "COVID-19 Deaths",
+       y = "Count") +
+  facet_wrap(~region) +
+  theme(strip.text = element_text(size = 12))
+
+
 
 ## Looking at Holidays #################################################################
 holidays <- c(as.Date(Easter(2020)), as.Date(Easter(2021)), as.Date(Easter(2022)), as.Date(Easter(2023)), as.Date(Easter(2024)),
@@ -321,7 +525,7 @@ holidays <- c(as.Date(Easter(2020)), as.Date(Easter(2021)), as.Date(Easter(2022)
 
 mmwr_holidays <- MMWRweek(holidays)
 
-mc_holidays2 <- left_join(mc, mmwr_holidays, join_by(year == MMWRyear, mmwr_week == MMWRweek))
+mc_holidays2 <- left_join(merged_clean, mmwr_holidays, join_by(year == MMWRyear, mmwr_week == MMWRweek))
 
 see <- mc_holidays2 %>% 
   select(date.x, mmwr_week, year, MMWRweek.y)
@@ -331,21 +535,30 @@ mc_holidays <- mc_holidays2 %>%
   rename(holiday = MMWRday)
 
 ggplot(mc_holidays, aes(x = holiday)) +
-  geom_bar(fill = c("#43A0E8", "#F57D6D")) +
+  geom_bar(fill = c("#C625C6", "#7A20DA"), color = 'black', width = 0.7) +
   scale_x_continuous(breaks = c(0, 1), labels = c("Normal Week", "Holiday Week")) +
   labs(x = "Type of Week",
        y = "Count",
        title = "Distribution of Normal Weeks vs. Holiday Weeks") +
-  theme_minimal()
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 12))
 
 ## Looking at Seasons #################################################################
-mc %>% 
+merged_clean2 <- merged_clean %>% 
+  mutate(season = case_when((season_Spring == 1) ~ 'Spring',
+                            (season_Summer == 1) ~ 'Summer',
+                            (season_Winter == 1) ~ 'Winter',
+                            (season_Fall == 1) ~ 'Fall'))
+
+merged_clean2 %>% 
   group_by(season) %>% 
   ggplot(aes(x = season)) +
-  geom_bar(fill = c("#F5D46D", "#70E17C", "#F57D6D", "#43A0E8")) +
+  geom_bar(fill = c("#E8A515", "#FEE82E", "#C625C6", "#7A20DA"), color = "black") +
   labs(x = "Season",
        y = "Count",
-       title = "Distribution of Seasons")
+       title = "Distribution of Seasons") +
+  theme(axis.text.x = element_text(size = 12)) +
+  theme_minimal()
 
 mc %>% 
   group_by(season) %>% 
@@ -366,6 +579,22 @@ merged_clean %>%
 mc %>% 
   ggplot(aes(x = log(covid_19_deaths))) +
   geom_histogram(fill = "#43A0E8", color = 'white') +
+  theme_minimal() +
+  labs(title = "Distribution of COVID-19 Deaths (Log-Transformed)",
+       x = "COVID-19 Deaths",
+       y = "Count (Log-Transformed)")
+
+mc %>% 
+  ggplot(aes(x = (covid_19_deaths))) +
+  geom_histogram(fill = "#43A0E8", color = 'white') +
+  theme_minimal() +
+  labs(title = "Distribution of COVID-19 Deaths",
+       x = "COVID-19 Deaths",
+       y = "Count")
+
+mc %>% 
+  ggplot(aes(x = covid_19_deaths)) +
+  geom_histogram(fill = "#43A0E8", color = 'white') +
   theme_minimal()
 
 mc %>% 
@@ -373,4 +602,145 @@ mc %>%
   ggplot(aes(x = (covid_19_deaths))) +
   geom_histogram()
 
+
+### BY MONTH BOXPLOT
+mc %>% 
+  ggplot(aes(x = as.factor(month.x), y = log(covid_19_deaths), group = month.x, fill = as.factor(month.x))) +
+  geom_boxplot(show.legend = FALSE) +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "C") +
+  labs(y = "COVID-19 Deaths (Log-Transformed)",
+       x = "Month",
+       title = "COVID-19 Deaths by Month") +
+  scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"), 
+                   breaks = c("1", "2", "3", "4", "5", "6", "7", "8","9","10","11","12")) +
+  theme(axis.text.x = element_text(size = 12))
+
+### BY MONTH AND BY REGION BOXPLOTS
+mc %>% 
+  ggplot(aes(x = as.factor(month.x), y = log(covid_19_deaths), group = month.x, fill = as.factor(month.x))) +
+  geom_boxplot(show.legend = FALSE) +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "C") +
+  labs(y = "COVID-19 Deaths (Log-Transformed)",
+       x = "Month",
+       title = "COVID-19 Deaths by Month") +
+  scale_x_discrete(labels = c("Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"), 
+                   breaks = c("1", "2", "3", "4", "5", "6", "7", "8","9","10","11","12")) +
+  facet_wrap(~region) +
+  theme(axis.text.x = element_text(size = 10, angle = 90))
+
+### BY WEEK BOXPLOT
+mc %>% 
+  ggplot(aes(x = as.factor(mmwr_week), y = log(covid_19_deaths), group = mmwr_week, fill = as.factor(mmwr_week))) +
+  geom_boxplot(show.legend = FALSE) +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "C") +
+  labs(y = "Covid-19 Deaths (Log-Transformed)",
+       x = "MMWR Week",
+       title = "COVID-19 Deaths by MMWR Week") + 
+  theme(axis.text.x = element_text(angle = 90))
+  
+### BY REGION HISTOGRAM COVID DEATHS
+mc %>% 
+  ggplot(aes(x = log(log(covid_19_deaths)), fill = region)) +
+  geom_histogram(color = 'black', show.legend = FALSE) +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Distribution of COVID-19 Deaths By Region (Log-Transformed)",
+       x = "COVID-19 Deaths",
+       y = "Count (Log-Transformed)") +
+  facet_wrap(~region) +
+  theme(strip.text = element_text(size = 12))
+
+mc %>% 
+  ggplot(aes(x = (covid_19_deaths), fill = region)) +
+  geom_histogram(color = 'black', show.legend = FALSE) +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Distribution of COVID-19 Deaths By Region",
+       x = "COVID-19 Deaths",
+       y = "Count") +
+  facet_wrap(~region) +
+  theme(strip.text = element_text(size = 12))
+
+mc %>% 
+  filter(covid_19_deaths != 0) %>% 
+  group_by(region) %>% 
+  count()
+
+
+south <- merged_clean %>% 
+  filter(region_South == 1) %>% 
+  select(date.x, covid_19_deaths) %>% 
+  group_by(date.x) %>% 
+  mutate(total_deaths = sum(covid_19_deaths)) %>% 
+  distinct(date.x, total_deaths)
+
+south %>% 
+  ggplot(aes(x = date.x, y = total_deaths)) +
+  geom_point(size = 0.2) +
+  geom_line()
+
+ny <- merged_clean %>% 
+  filter(location == "NY") %>% 
+  select(date.x, covid_19_deaths) %>% 
+  group_by(date.x) %>% 
+  mutate(total_deaths = sum(covid_19_deaths)) %>% 
+  distinct(date.x, total_deaths)
+
+ca <- merged_clean %>% 
+  filter(location == "CA") %>% 
+  select(date.x, covid_19_deaths) %>% 
+  group_by(date.x) %>% 
+  mutate(total_deaths = sum(covid_19_deaths)) %>% 
+  distinct(date.x, total_deaths)
+
+deaths_2 <- read_csv("data/deaths_with_abbs.csv") %>% 
+  janitor::clean_names()
+
+deaths_3 <- deaths_2 %>% 
+  select(covid_19_deaths, state, end_date, group) %>% 
+  filter(state != "United States")
+
+ca <- deaths_3 %>% 
+  filter(state == "California",
+         group == "By Week")
+
+
+cd_new <- read_csv("data/owid-covid-data.csv")
+
+cd_new %>% 
+  filter(location == "United States")
+
+cd<- t(cd_new)
+
+west <- merged_clean %>% 
+  filter(region_West == 1) %>% 
+  group_by(date.x) %>% 
+  mutate(total_deaths = sum(covid_19_deaths)) %>% 
+  distinct(date.x, total_deaths)
+
+ggplot(west, aes(x = date.x, y = total_deaths)) +
+  geom_point()
+
+ggplot(west, aes(x = total_deaths)) +
+  geom_histogram()
+
+regions <- mc %>% 
+  group_by(date.x, region) %>% 
+  mutate(totes = sum(covid_19_deaths)) %>% 
+  filter(region != "Puerto Rico") %>% 
+  distinct(date.x, totes, region)
+
+regions %>% 
+  ggplot(aes(x = totes, fill = region)) +
+  geom_histogram(color = 'black', show.legend = FALSE) +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Distribution of COVID-19 Deaths By Region",
+       x = "COVID-19 Deaths",
+       y = "Count") +
+  facet_wrap(~region) +
+  theme(strip.text = element_text(size = 12))
 
