@@ -1,0 +1,294 @@
+---
+title: "Univariate Prophet Model"
+subtitle: "Predicting COVID-19 Deaths (STAT 390)" 
+author: "Ryan Nguyen"
+
+format:
+  html:
+    toc: true
+    embed-resources: true
+    link-external-newwindow: true
+    code-fold: true
+    
+output:
+  html_document:
+    code_folding: hide
+
+execute:
+  warning: false
+
+from: markdown+emoji 
+---
+
+## 1. Load Libraries & Data
+```{r}
+
+# Load Necessary Files ---------------------------------------------------------
+library(forecast)
+library(tseries)
+library(tidyverse)
+library(tidymodels)
+library(kableExtra)
+library(modeltime)
+library(prophet)
+library(timetk)
+library(Metrics)
+
+set.seed(123)
+
+# Loading Data  ----------------------------------------------------------------
+
+## Converting it into Prophet format
+total <- read_csv("data/new_daily_deaths.csv") %>% 
+  rename(ds = date,
+         y = daily_deaths) %>% 
+  select(-c(region)) %>% 
+  group_by(ds) %>% 
+  mutate(y = sum(y)) %>% 
+  distinct(ds, y)
+
+east <- read_csv("data/east_daily.csv") %>% 
+  rename(ds = date,
+         y = daily_deaths)
+
+midwest <- read_csv("data/midwest_daily.csv") %>% 
+  rename(ds = date,
+         y = daily_deaths)
+
+south <- read_csv("data/south_daily.csv") %>% 
+  rename(ds = date,
+         y = daily_deaths)
+
+west <- read_csv("data/west_daily.csv") %>% 
+  rename(ds = date,
+         y = daily_deaths)
+```
+
+
+## 2. Data Splitting
+```{r}
+# Data Splitting ---------------------------------------------------------------
+total_splits <- time_series_split(total, initial = "908 days", assess = "228 days")
+total_train <- training(total_splits)
+total_test <- testing(total_splits)
+
+east_splits <- time_series_split(east, initial = "1022 days", assess = "114 days")
+east_train <- training(east_splits)
+east_test <- testing(east_splits)
+
+midwest_splits <- time_series_split(midwest, initial = "1022 days", assess = "114 days")
+midwest_train <- training(midwest_splits)
+midwest_test <- testing(midwest_splits)
+
+south_splits <- time_series_split(south, initial = "1022 days", assess = "114 days")
+south_train <- training(south_splits)
+south_test <- testing(south_splits)
+
+west_splits <- time_series_split(west, initial = "1022 days", assess = "114 days")
+west_train <- training(west_splits)
+west_test <- testing(west_splits)
+```
+
+## 3. Building Prophet Models
+```{r}
+
+## Total -----------------------------------------------------------------------
+### Initialize & Fit the Prophet ----
+total_prophet <- prophet(total_train)
+
+### Forecast Future Predictions ----
+total_future <- make_future_dataframe(total_prophet, periods = nrow(total_test), freq = "day")
+total_forecast <- predict(total_prophet, total_future)
+
+
+## East Region -----------------------------------------------------------------
+### Initialize & Fit the Prophet ----
+east_prophet <- prophet(east_train)
+
+### Forecast Future Predictions ----
+east_future <- make_future_dataframe(east_prophet, periods = nrow(east_test), freq = "day")
+east_forecast <- predict(east_prophet, east_future)
+
+
+### Initialize & Fit the Prophet ----
+midwest_prophet <- prophet(midwest_train)
+
+### Forecast Future Predictions ----
+midwest_future <- make_future_dataframe(midwest_prophet, periods = nrow(midwest_test), freq = "day")
+midwest_forecast <- predict(midwest_prophet, midwest_future)
+
+
+## South Region -----------------------------------------------------------------
+### Initialize & Fit the Prophet ----
+south_prophet <- prophet(south_train)
+
+### Forecast Future Predictions ----
+south_future <- make_future_dataframe(south_prophet, periods = nrow(south_test), freq = "day")
+south_forecast <- predict(south_prophet, south_future)
+
+
+## West Region -----------------------------------------------------------------
+### Initialize & Fit the Prophet ----
+west_prophet <- prophet(west_train)
+
+### Forecast Future Predictions ----
+west_future <- make_future_dataframe(west_prophet, periods = nrow(west_test), freq = "day")
+west_forecast <- predict(west_prophet, west_future)
+```
+
+## 4. Plotting Forecasts
+
+```{r}
+plot(total_prophet, total_forecast) +
+  geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
+  theme_minimal() +
+  labs(title = "Total Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+east_prophet_plot <- plot(east_prophet, east_forecast) +
+  theme_minimal() +
+  labs(title = "East Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+east_prophet_plot
+
+midwest_prophet_plot <- plot(midwest_prophet, midwest_forecast) +
+  theme_minimal() +
+  labs(title = "Midwest Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+midwest_prophet_plot 
+
+south_prophet_plot <- plot(south_prophet, south_forecast) +
+  theme_minimal() +
+  labs(title = "South Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+south_prophet_plot
+
+west_prophet_plot <- plot(west_prophet, west_forecast) +
+  theme_minimal() +
+  labs(title = "West Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+west_prophet_plot
+
+```
+
+
+## 5. Model Accuracy
+```{r}
+## Total Prophet ----------------------------------------------------------------
+total_forecast2 <- total_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-08-07"))
+
+performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+total_mae <- mae(performance_total$y, performance_total$yhat)
+print(paste("The MAE for the total model is", total_mae))
+
+# Check MASE value
+total_mase <- mase(performance_total$y, performance_total$yhat)
+print(paste("The MASE for the total model is", total_mase))
+```
+
+### East
+```{r}
+## east Prophet ----------------------------------------------------------------
+east_forecast2 <- east_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+east_prophet_mae<- mae(performance_east$y, performance_east$yhat)
+print(paste("The MAE for the East model is", east_prophet_mae))
+
+# Check MASE value
+east_prophet_mase <- mase(performance_east$y, performance_east$yhat)
+print(paste("The MASE for the East model is", east_prophet_mase))
+
+```
+
+### Midwest
+```{r}
+## Midwest Prophet ----------------------------------------------------------------
+midwest_forecast2 <- midwest_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+midwest_prophet_mae<- mae(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MAE for the Midwest model is", midwest_prophet_mae))
+
+# Check MASE value
+midwest_prophet_mase <- mase(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MASE for the Midwest model is", midwest_prophet_mase))
+```
+
+### South 
+```{r}
+## South Prophet ----------------------------------------------------------------
+south_forecast2 <- south_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+south_prophet_mae<- mae(performance_south$y, performance_south$yhat)
+print(paste("The MAE for the South model is", south_prophet_mae))
+
+# Check MASE value
+south_prophet_mase <- mase(performance_south$y, performance_south$yhat)
+print(paste("The MASE for the South model is", south_prophet_mase))
+```
+
+### West
+```{r}
+## West Prophet ----------------------------------------------------------------
+west_forecast2 <- west_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+west_prophet_mae<- mae(performance_west$y, performance_west$yhat)
+print(paste("The MAE for the West model is", west_prophet_mae))
+
+# Check MASE value
+west_prophet_mase <- mase(performance_west$y, performance_west$yhat)
+print(paste("The MASE for the West model is", west_prophet_mase))
+
+```
+
+```{r eval = FALSE}
+# save results
+save(
+  east_prophet_plot,
+  midwest_prophet_plot,
+  south_prophet_plot,
+  west_prophet_plot,
+  east_prophet_mae,
+  east_prophet_mase,
+  midwest_prophet_mae,
+  midwest_prophet_mase,
+  south_prophet_mae,
+  south_prophet_mase,
+  west_prophet_mae,
+  west_prophet_mase,
+  file = "results/uni_prophet.rda"
+)
+```
+
