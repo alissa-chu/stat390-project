@@ -1,0 +1,1369 @@
+---
+title: "Univariate Arima Models"
+subtitle: "Predicting COVID-19 Deaths (STAT 390)" 
+author: "Ryan Nguyen"
+
+format:
+  html:
+    toc: true
+    embed-resources: true
+    link-external-newwindow: true
+    code-fold: true
+    
+output:
+  html_document:
+    code_folding: hide
+
+execute:
+  warning: false
+
+from: markdown+emoji 
+---
+
+## 1. Load Libraries, Seed, & Data
+```{r}
+# Load necessary libraries
+library(forecast)
+library(tseries)
+library(tidyverse)
+library(tidymodels)
+library(kableExtra)
+library(modeltime)
+library(timetk)
+library(cowplot)
+
+# setting the seed
+set.seed(123)
+
+# Loading Data  ----------------------------------------------------------------
+daily_deaths <- read_csv("data/new_daily_deaths.csv") %>% 
+  select(daily_deaths)
+
+east <- read_csv("data/east_daily.csv")
+
+midwest <- read_csv("data/midwest_daily.csv")
+
+south <- read_csv("data/south_daily.csv")
+
+west <- read_csv("data/west_daily.csv")
+```
+
+
+## 2. Data Splitting
+```{r}
+# Data Splitting ---------------------------------------------------------------
+east_splits <- time_series_split(east, initial = "1022 days", assess = "114 days")
+east_train <- training(east_splits)
+east_test <- testing(east_splits)
+
+midwest_splits <- time_series_split(midwest, initial = "1022 days", assess = "114 days")
+midwest_train <- training(midwest_splits)
+midwest_test <- testing(midwest_splits)
+
+south_splits <- time_series_split(south, initial = "1022 days", assess = "114 days")
+south_train <- training(south_splits)
+south_test <- testing(south_splits)
+
+west_splits <- time_series_split(west, initial = "1022 days", assess = "114 days")
+west_train <- training(west_splits)
+west_test <- testing(west_splits)
+
+## Convert Into Time Series ----------------------------------------------------
+east_train_ts <- ts(east_train %>%
+                      select(daily_deaths))
+east_test_ts <- ts(east_test %>%
+                     select(daily_deaths))
+east_ts <- ts(east %>% 
+                select(daily_deaths))
+
+midwest_train_ts <- ts(midwest_train %>%
+                      select(daily_deaths))
+midwest_test_ts <- ts(midwest_test %>%
+                     select(daily_deaths))
+midwest_ts <- ts(midwest %>% 
+                select(daily_deaths))
+
+south_train_ts <- ts(south_train %>%
+                    select(daily_deaths))
+south_test_ts <- ts(south_test %>%
+                   select(daily_deaths))
+south_ts <- ts(south %>%
+                 select(daily_deaths))
+
+west_train_ts <- ts(west_train %>%
+                   select(daily_deaths))
+west_test_ts <- ts(west_test %>%
+                  select(daily_deaths))
+west_ts <- ts(west %>%
+                select(daily_deaths))
+
+## Plotting Training and Testing -----------------------------------------------
+par(mfrow=c(2,2))
+ggplot() +
+  geom_line(data = east_test, aes(x = date, y = daily_deaths, color = "turquoise")) +
+  geom_point(data = east_test, aes(x = date, y = daily_deaths, color = "turquoise"), size = .5) +
+  geom_line(data = east_train, aes(x = date, y = daily_deaths, color = "orange")) +
+  geom_point(data = east_train, aes(x = date, y = daily_deaths, color = "orange"), size = .5) +
+  scale_color_manual(name="Data Set", values = c("turquoise", "orange"), labels = c("Training", "Testing")) +
+  labs(y = "Daily Deaths",
+       x = "Date",
+       title = "East Region Training vs. Testing Data")
+
+ggplot() +
+  geom_line(data = midwest_test, aes(x = date, y = daily_deaths, color = "turquoise")) +
+  geom_point(data = midwest_test, aes(x = date, y = daily_deaths, color = "turquoise"), size = .5) +
+  geom_line(data = midwest_train, aes(x = date, y = daily_deaths, color = "orange")) +
+  geom_point(data = midwest_train, aes(x = date, y = daily_deaths, color = "orange"), size = .5) +
+  scale_color_manual(name="Data Set", values = c("turquoise", "orange"), labels = c("Training", "Testing")) +
+  labs(y = "Daily Deaths",
+       x = "Date",
+       title = "Midwest Region Training vs. Testing Data")
+
+ggplot() +
+  geom_line(data = south_test, aes(x = date, y = daily_deaths, color = "turquoise")) +
+  geom_point(data = south_test, aes(x = date, y = daily_deaths, color = "turquoise"), size = .5) +
+  geom_line(data = south_train, aes(x = date, y = daily_deaths, color = "orange")) +
+  geom_point(data = south_train, aes(x = date, y = daily_deaths, color = "orange"), size = .5) +
+  scale_color_manual(name="Data Set", values = c("turquoise", "orange"), labels = c("Training", "Testing")) +
+  labs(y = "Daily Deaths",
+       x = "Date",
+       title = "South Region Training vs. Testing Data")
+
+ggplot() +
+  geom_line(data = west_test, aes(x = date, y = daily_deaths, color = "turquoise")) +
+  geom_point(data = west_test, aes(x = date, y = daily_deaths, color = "turquoise"), size = .5) +
+  geom_line(data = west_train, aes(x = date, y = daily_deaths, color = "orange")) +
+  geom_point(data = west_train, aes(x = date, y = daily_deaths, color = "orange"), size = .5) +
+  scale_color_manual(name="Data Set", values = c("turquoise", "orange"), labels = c("Training", "Testing")) +
+  labs(y = "Daily Deaths",
+       x = "Date",
+       title = "West Region Training vs. Testing Data")
+```
+
+## 3. Testing for Stationarity 
+```{r}
+
+### Using Augmented Dickey-Fuller Test -----------------------------------------
+adf_east <- adf.test(east_ts)
+print(adf_east) # p-value is 0.01 < 0.05, implying it is stationary
+
+adf_midwest <- adf.test(midwest_ts)
+print(adf_midwest) # p-value is 0.4919 > 0.05, implying it is NOT stationary
+midwest_ts <- diff(midwest_ts)
+adf_midwest <- adf.test(midwest_ts)
+print(adf_midwest) # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
+
+adf_south <- adf.test(south_ts)
+print(adf_south) # p-value is 0.3018 > 0.05, implying it is NOT stationary
+south_ts <- diff(south_ts)
+adf_south <- adf.test(south_ts)
+print(adf_south) # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
+
+adf_west <- adf.test(west_ts)
+print(adf_west) # p-value is 0.4098 > 0.05, implying it is NOT stationary
+west_ts <- diff(west_ts)
+adf_west <- adf.test(west_ts)
+print(adf_west)  # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
+
+
+### Making Testing/Training Stationary -----------------------------------------
+midwest_train_ts <- diff(midwest_train_ts)
+midwest_test_ts <- diff(midwest_test_ts)
+
+south_train_ts <- diff(south_train_ts)
+south_test_ts <- diff(south_test_ts)
+
+west_train_ts <- diff(west_train_ts)
+west_test_ts <- diff(west_test_ts)
+```
+## 4. ACF & PACF Plots
+```{r}
+## ACF & PACF Plots ------------------------------------------------------------
+par(mfrow=c(3, 1))
+acf(east_ts, main = "East")
+pacf(east_ts, main = "East")
+plot(east_ts, main = "Daily Deaths: East")
+
+acf(midwest_ts, main = "Midwest")
+pacf(midwest_ts, main = "Midwest")
+plot(midwest_ts, main = "Daily Deaths: Midwest")
+
+acf(south_ts, main = "South")
+pacf(south_ts, main = "South")
+plot(south_ts, main = "Daily Deaths: South")
+
+acf(west_ts, main = "West")
+pacf(west_ts, main = "West")
+plot(south_ts, main = "Daily Deaths: South")
+plot(west_ts, main = "Daily Deaths: West")
+
+```
+
+## 5. Time Series Decomposition
+```{r}
+# total daily death decomposition
+daily_ts <- ts(daily_deaths, frequency = 365)
+
+decomposed_ts <- decompose(daily_ts)
+
+# Plot the original time series and the decomposed components
+par(mfrow=c(2,1))
+plot(daily_ts, main = "Total Original Time Series", ylab = "Value", col = "blue")
+plot(decomposed_ts$trend, main = "Trend Component", ylab = "Value", col = "red")
+plot(decomposed_ts$seasonal, main = "Seasonal Component", ylab = "Value", col = "green")
+plot(decomposed_ts$random, main = "Residual Component", ylab = "Value", col = "purple")
+
+
+# East Decomposition -----------------------------------------------------------
+east_daily <- east %>% 
+  select(daily_deaths)
+
+east_ts <- ts(east_daily, frequency = 365)
+
+decomposed_east <- decompose(east_ts)
+
+# Plot the original time series and the decomposed components
+par(mfrow=c(2,1))
+plot(east_ts, main = "East Original Time Series", ylab = "Value", col = "blue")
+plot(decomposed_east$trend, main = "Trend Component", ylab = "Value", col = "red")
+plot(decomposed_east$seasonal, main = "Seasonal Component", ylab = "Value", col = "green")
+plot(decomposed_east$random, main = "Residual Component", ylab = "Value", col = "purple")
+
+
+## Midwest Decomposition ----------------------------------------------------------
+midwest_daily <- midwest %>% 
+  select(daily_deaths)
+
+midwest_ts <- ts(midwest_daily, frequency = 365)
+
+decomposed_midwest <- decompose(midwest_ts)
+
+# Plot the original time series and the decomposed components
+par(mfrow=c(2,1))
+plot(midwest_ts, main = "Midwest Original Time Series", ylab = "Value", col = "blue")
+plot(decomposed_midwest$trend, main = "Trend Component", ylab = "Value", col = "red")
+plot(decomposed_midwest$seasonal, main = "Seasonal Component", ylab = "Value", col = "green")
+plot(decomposed_midwest$random, main = "Residual Component", ylab = "Value", col = "purple")
+
+
+
+## South Decomposition ----------------------------------------------------------
+south_daily <- south %>% 
+  select(daily_deaths)
+
+south_ts <- ts(south_daily, frequency = 365)
+
+decomposed_south <- decompose(south_ts)
+
+# Plot the original time series and the decomposed components
+par(mfrow=c(2,1))
+plot(south_ts, main = "South Original Time Series", ylab = "Value", col = "blue")
+plot(decomposed_south$trend, main = "Trend Component", ylab = "Value", col = "red")
+plot(decomposed_south$seasonal, main = "Seasonal Component", ylab = "Value", col = "green")
+plot(decomposed_south$random, main = "Residual Component", ylab = "Value", col = "purple")
+
+
+## West Decomposition ----------------------------------------------------------
+west_daily <- west %>% 
+  select(daily_deaths)
+
+west_ts <- ts(west_daily, frequency = 365)
+
+decomposed_west <- decompose(west_ts)
+
+# Plot the original time series and the decomposed components
+par(mfrow=c(2,1))
+plot(west_ts, main = "West Original Time Series", ylab = "Value", col = "blue")
+plot(decomposed_west$trend, main = "Trend Component", ylab = "Value", col = "red")
+plot(decomposed_west$seasonal, main = "Seasonal Component", ylab = "Value", col = "green")
+plot(decomposed_west$random, main = "Residual Component", ylab = "Value", col = "purple")
+```
+## 6. ARIMA Model
+
+### 6.1 Initial Model
+```{r}
+# Building ARIMA Model ---------------------------------------------------------
+east_arima <- arima(east_train_ts, order=c(1,0,1))
+midwest_arima <- arima(midwest_train_ts, order=c(1,1,1))
+south_arima <- arima(south_train_ts, order=c(1,1,1))
+west_arima <- arima(west_train_ts, order=c(1,1,1))
+
+## Summary & Forecast ---------------------------------------------------------
+summary(east_arima)
+summary(midwest_arima)
+summary(south_arima)
+summary(west_arima)
+
+east_values <- forecast(east_arima, h = length(east_test_ts))
+midwest_values <- forecast(midwest_arima, h = length(midwest_test_ts))
+south_values <- forecast(south_arima, h = length(south_test_ts))
+west_values <- forecast(west_arima, h = length(west_test_ts))
+```
+
+### 6.2 Accuracy
+```{r}
+## Evaluating Accuracy ---------------------------------------------------------
+east_initial_arima_acc <- forecast::accuracy(east_values)
+
+east_initial_arima_acc %>% 
+  kbl(caption = "<center>Initial East Accuracy<center>") %>% 
+  kable_styling()
+
+### East Region
+east_test_plot <- as.data.frame(east_test_ts) %>% 
+  mutate(num = seq(1023, (1023+113)))
+
+east_initial_arima_plot <- forecast::autoplot(east_values) +
+  geom_line(data = east_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "East Region Initial ARIMA",
+       y = "Daily Deaths")
+
+east_initial_arima_plot
+
+
+### Midwest Region
+
+midwest_initial_arima_acc <- forecast::accuracy(midwest_values)
+
+midwest_initial_arima_acc %>% 
+  kbl(caption = "<center>Initial Midwest Accuracy<center>") %>% 
+  kable_styling()
+
+midwest_test_plot <- as.data.frame(midwest_test_ts) %>% 
+  mutate(num = seq(1023, (1023+112)))
+
+midwest_initial_arima_plot <- forecast::autoplot(midwest_values) +
+  geom_line(data = midwest_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "Midwest Region Initial ARIMA",
+       y = "Daily Deaths")
+
+midwest_initial_arima_plot
+
+
+### South Region
+
+south_initial_arima_acc <- forecast::accuracy(south_values)
+
+south_initial_arima_acc %>% 
+  kbl(caption = "<center>Initial South Accuracy<center>") %>% 
+  kable_styling()
+
+south_test_plot <- as.data.frame(south_test_ts) %>% 
+  mutate(num = seq(1023, (1023+112)))
+
+south_initial_arima_plot <- forecast::autoplot(south_values) +
+  geom_line(data = south_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "South Region Initial ARIMA",
+       y = "Daily Deaths")
+
+south_initial_arima_plot 
+
+
+### West Region
+
+west_initial_arima_acc <- forecast::accuracy(west_values)
+
+west_initial_arima_acc %>% 
+  kbl(caption = "<center>Initial West Accuracy<center>") %>% 
+  kable_styling()
+
+west_test_plot <- as.data.frame(west_test_ts) %>% 
+  mutate(num = seq(1023, (1023+112)))
+
+west_initial_arima_plot <- forecast::autoplot(west_values) +
+  geom_line(data = west_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "West Region Initial ARIMA",
+       y = "Daily Deaths") 
+
+west_initial_arima_plot
+
+```
+
+### 6.3 Grid Search
+```{r eval = FALSE}
+
+# Grid Search for p and q ------------------------------------------------------
+
+p_values <- 0:5  # AR order
+d_values <- 0:0  # I order
+q_values <- 0:5  # MA order
+
+## East - Perform grid search for ARIMA parameters  ----------------------------
+best_east_model <- NULL
+best_east_aic <- Inf
+
+for (p in p_values) {
+  for (d in d_values) {
+    for (q in q_values) {
+      # Fit ARIMA model
+      arima_model <- tryCatch(
+        {
+          fit <- Arima(east_ts, order = c(p, d, q))
+          fit
+        },
+        error = function(e) {
+          NULL
+        }
+      )
+      
+      # Check if ARIMA model was successfully fitted
+      if (!is.null(arima_model)) {
+        # Check AIC criterion
+        if (AIC(arima_model) < best_east_aic) {
+          best_east_model <- arima_model
+          best_east_aic <- AIC(arima_model)
+          best_east_order <- c(p, d, q)
+        }
+      }
+    }
+  }
+}
+```
+
+
+
+
+```{r eval = FALSE}
+## Midwest - Perform grid search for ARIMA parameters  -------------------------
+p_values <- 0:5  # AR order
+d_values <- 0:1  # I order
+q_values <- 0:5  # MA order
+
+best_midwest_model <- NULL
+best_midwest_aic <- Inf
+
+for (p in p_values) {
+  for (d in d_values) {
+    for (q in q_values) {
+      # Fit ARIMA model
+      arima_model <- tryCatch(
+        {
+          fit <- Arima(midwest_ts, order = c(p, d, q))
+          fit
+        },
+        error = function(e) {
+          NULL
+        }
+      )
+      
+      # Check if ARIMA model was successfully fitted
+      if (!is.null(arima_model)) {
+        # Check AIC criterion
+        if (AIC(arima_model) < best_midwest_aic) {
+          best_midwest_model <- arima_model
+          best_midwest_aic <- AIC(arima_model)
+          best_midwest_order <- c(p, d, q)
+        }
+      }
+    }
+  }
+}
+
+
+```
+
+```{r eval = FALSE}
+
+## South - Perform grid search for ARIMA parameters  ---------------------------
+p_values <- 0:5  # AR order
+d_values <- 0:1  # I order
+q_values <- 0:5  # MA order
+
+best_south_model <- NULL
+best_south_aic <- Inf
+
+for (p in p_values) {
+  for (d in d_values) {
+    for (q in q_values) {
+      # Fit ARIMA model
+      arima_model <- tryCatch(
+        {
+          fit <- Arima(south_ts, order = c(p, d, q))
+          fit
+        },
+        error = function(e) {
+          NULL
+        }
+      )
+      
+      # Check if ARIMA model was successfully fitted
+      if (!is.null(arima_model)) {
+        # Check AIC criterion
+        if (AIC(arima_model) < best_south_aic) {
+          best_south_model <- arima_model
+          best_south_aic <- AIC(arima_model)
+          best_south_order <- c(p, d, q)
+        }
+      }
+    }
+  }
+}
+
+```
+
+```{r eval = FALSE}
+
+## West - Perform grid search for ARIMA parameters  ----------------------------
+p_values <- 0:5  # AR order
+d_values <- 0:1  # I order
+q_values <- 0:5  # MA order
+
+best_west_model <- NULL
+best_west_aic <- Inf
+
+for (p in p_values) {
+  for (d in d_values) {
+    for (q in q_values) {
+      # Fit ARIMA model
+      arima_model <- tryCatch(
+        {
+          fit <- Arima(west_ts, order = c(p, d, q))
+          fit
+        },
+        error = function(e) {
+          NULL
+        }
+      )
+      
+      # Check if ARIMA model was successfully fitted
+      if (!is.null(arima_model)) {
+        # Check AIC criterion
+        if (AIC(arima_model) < best_west_aic) {
+          best_west_model <- arima_model
+          best_west_aic <- AIC(arima_model)
+          best_west_order <- c(p, d, q)
+        }
+      }
+    }
+  }
+}
+```
+
+```{r eval = FALSE}
+
+# Saving results
+save(best_east_order, best_east_model,
+     best_south_order, best_south_model,
+     best_midwest_order, best_midwest_model,
+     best_west_order, best_west_model, 
+     file = "results/arima_grid.rda")
+```
+
+#### Best East Model
+```{r}
+# load results
+load("results/arima_grid.rda")
+# Display the best ARIMA model and its parameters
+print(paste(best_east_order))
+print(best_east_model)
+```
+
+#### Best Midwest Model
+```{r}
+print(paste(best_midwest_order))
+print(best_midwest_model)
+```
+
+#### Best South Model
+```{r}
+print(paste(best_south_order))
+print(best_south_model)
+```
+
+#### Best West Model
+```{r}
+print(paste(best_west_order))
+print(best_west_model)
+```
+
+### 6.4 Rebuilding ARIMA Model
+```{r}
+# Rebuilding ARIMA Models ------------------------------------------------------
+east_arima <- arima(east_train_ts, order=c(5,0,5))
+midwest_arima <- arima(midwest_train_ts, order=c(5,1,5))
+south_arima <- arima(south_train_ts, order=c(5,1,5))
+west_arima <- arima(west_train_ts, order=c(5,1,5), method = "ML")
+
+
+east_values <- forecast(east_arima, h = length(east_test_ts))
+midwest_values <- forecast(midwest_arima, h = length(midwest_test_ts))
+south_values <- forecast(south_arima, h = length(south_test_ts))
+west_values <- forecast(west_arima, h = length(west_test_ts))
+
+## Evaluating Accuracy & Plots -------------------------------------------------
+east_tuned_arima_acc <- forecast::accuracy(east_values)
+
+east_tuned_arima_acc %>% 
+  kbl(caption = "<center>Tuned East Accuracy<center>") %>% 
+  kable_styling()
+
+### East Region
+east_tuned_arima_plot <- forecast::autoplot(east_values) +
+  geom_line(data = east_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "East Region Tuned ARIMA",
+       y = "Daily Deaths")
+
+east_tuned_arima_plot
+
+
+### Midwest Region
+
+midwest_tuned_arima_acc <- forecast::accuracy(midwest_values)
+
+midwest_tuned_arima_acc %>% 
+  kbl(caption = "<center>Tuned Midwest Accuracy<center>") %>% 
+  kable_styling()
+
+midwest_tuned_arima_plot <- forecast::autoplot(midwest_values) +
+  geom_line(data = midwest_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "Midwest Region Tuned ARIMA",
+       y = "Daily Deaths")
+
+midwest_tuned_arima_plot
+
+
+### South Region
+
+south_tuned_arima_acc <- forecast::accuracy(south_values)
+
+south_tuned_arima_acc %>% 
+  kbl(caption = "<center>Tuned South Accuracy<center>") %>% 
+  kable_styling()
+
+south_tuned_arima_plot <- forecast::autoplot(south_values) +
+  geom_line(data = south_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "South Region Tuned ARIMA",
+       y = "Daily Deaths")
+
+south_tuned_arima_plot 
+
+
+### West Region
+west_tuned_arima_acc <- forecast::accuracy(west_values)
+
+west_tuned_arima_acc %>% 
+  kbl(caption = "<center>Tuned West Accuracy<center>") %>% 
+  kable_styling()
+
+west_tuned_arima_plot <- forecast::autoplot(west_values) +
+  geom_line(data = west_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "West Region Tuned ARIMA",
+       y = "Daily Deaths") 
+
+west_tuned_arima_plot
+
+```
+
+```{r eval = FALSE}
+# saving results
+save(east_tuned_arima_acc, east_initial_arima_acc, east_initial_arima_plot, east_tuned_arima_plot,
+     midwest_tuned_arima_acc, midwest_initial_arima_acc, midwest_initial_arima_plot, midwest_tuned_arima_plot,
+     south_tuned_arima_acc, south_initial_arima_acc, south_initial_arima_plot, south_tuned_arima_plot,
+     west_tuned_arima_acc, west_initial_arima_acc, west_initial_arima_plot, west_tuned_arima_plot,
+     file = "results/uni_arima.rda"
+     )
+```
+
+
+## 7. SARIMA Model
+
+### 7.1 Initial SARIMA Model
+```{r}
+# Building SARIMA model  ------------------------------------------------------
+east_sarima <- arima(east_train_ts, seasonal = list(order = c(1,1,1)))
+midwest_sarima <- arima(midwest_train_ts, seasonal = list(order = c(1,1,1)))
+south_sarima <- arima(south_train_ts, seasonal = list(order = c(1,1,1)))
+west_sarima <- arima(west_train_ts, seasonal = list(order = c(1,1,1)))
+
+# Summary of the SARIMA model
+summary(east_sarima)
+summary(midwest_sarima)
+summary(south_sarima)
+summary(west_sarima)
+
+## Forecasting with the SARIMA model -------------------------------------------
+east_values <- forecast(east_sarima, h = length(east_test_ts))
+midwest_values <- forecast(midwest_sarima, h = length(midwest_test_ts))
+south_values <- forecast(south_sarima, h = length(south_test_ts))
+west_values <- forecast(west_sarima, h = length(west_test_ts))
+```
+
+
+### 7.2 Accuracy
+```{r}
+## Plotting & Accuracy
+
+## East Region
+east_initial_sarima_acc <- forecast::accuracy(east_values)
+
+east_initial_sarima_acc %>% 
+  kbl(caption = "<center>Initial SARIMA East Accuracy<center>") %>% 
+  kable_styling()
+
+east_initial_sarima_plot <- forecast::autoplot(east_values) +
+  geom_line(data = east_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "East Region Initial SARIMA",
+       y = "Daily Deaths")
+
+east_initial_sarima_plot
+
+
+## Midwest Region
+midwest_initial_sarima_acc <- forecast::accuracy(midwest_values)
+
+midwest_initial_sarima_acc %>% 
+  kbl(caption = "<center>Initial SARIMA Midwest Accuracy<center>") %>% 
+  kable_styling()
+
+midwest_initial_sarima_plot <- forecast::autoplot(midwest_values) +
+  geom_line(data = midwest_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "Midwest Region Initial SARIMA",
+       y = "Daily Deaths")
+
+midwest_initial_sarima_plot
+
+
+
+## South Region
+south_initial_sarima_acc <- forecast::accuracy(south_values)
+
+south_initial_sarima_acc %>% 
+  kbl(caption = "<center>Initial SARIMA South Accuracy<center>") %>% 
+  kable_styling()
+
+south_initial_sarima_plot <- forecast::autoplot(south_values) +
+  geom_line(data = south_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "South Region Initial SARIMA",
+       y = "Daily Deaths")
+
+south_initial_sarima_plot
+
+
+
+## West Region
+west_initial_sarima_acc <- forecast::accuracy(west_values)
+
+west_initial_sarima_acc %>% 
+  kbl(caption = "<center>Initial SARIMA West Accuracy<center>") %>% 
+  kable_styling()
+
+west_initial_sarima_plot <- forecast::autoplot(west_values) +
+  geom_line(data = west_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "West Region Initial SARIMA",
+       y = "Daily Deaths")
+
+west_initial_sarima_plot
+
+
+```
+
+### 7.3 Grid Search
+```{r eval = FALSE}
+## Define the parameter grids --------------------------------------------------
+p_grid <- 0:5  # AR parameter
+d_grid <- 0:0  # Differencing parameter
+q_grid <- 0:5  # MA parameter
+P_grid <- 0:1  # Seasonal AR parameter
+D_grid <- 0:1  # Seasonal differencing parameter
+Q_grid <- 0:1  # Seasonal MA parameter
+s <- 12        # Seasonal period
+
+
+
+## East Grid Search ------------------------------------------------------------
+
+# Create East Region
+east_train <- east_train %>% 
+  select(daily_deaths)
+
+# Create an empty data frame to store the results
+east_results <- data.frame(order = character(),
+                      seasonal = character(),
+                      AIC = numeric(),
+                      stringsAsFactors = FALSE)
+
+# Perform grid search
+for (p in p_grid) {
+  for (d in d_grid) {
+    for (q in q_grid) {
+      for (P in P_grid) {
+        for (D in D_grid) {
+          for (Q in Q_grid) {
+            order <- c(p, d, q)
+            seasonal <- c(P, D, Q, s)
+            model <- tryCatch(
+              {
+                fit <- arima(east_train, order = order, seasonal = seasonal)
+                AIC_val <- AIC(fit)
+                # Append the results to the data frame
+                east_results <- rbind(east_results, data.frame(order = paste(order, collapse = ", "),
+                                                     seasonal = paste(seasonal, collapse = ", "),
+                                                     AIC = AIC_val))
+              },
+              error = function(e) NULL
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
+d_grid <- 0:1  # Differencing parameter
+
+## Midwest Grid Search ------------------------------------------------------------
+
+# Create Midwest Region
+midwest_train <- midwest_train %>% 
+  select(daily_deaths)
+
+# Create an empty data frame to store the results
+midwest_results <- data.frame(order = character(),
+                           seasonal = character(),
+                           AIC = numeric(),
+                           stringsAsFactors = FALSE)
+
+# Perform grid search
+for (p in p_grid) {
+  for (d in d_grid) {
+    for (q in q_grid) {
+      for (P in P_grid) {
+        for (D in D_grid) {
+          for (Q in Q_grid) {
+            order <- c(p, d, q)
+            seasonal <- c(P, D, Q, s)
+            model <- tryCatch(
+              {
+                fit <- arima(midwest_train, order = order, seasonal = seasonal)
+                AIC_val <- AIC(fit)
+                # Append the results to the data frame
+                midwest_results <- rbind(midwest_results, data.frame(order = paste(order, collapse = ", "),
+                                                               seasonal = paste(seasonal, collapse = ", "),
+                                                               AIC = AIC_val))
+              },
+              error = function(e) NULL
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
+## South Grid Search ------------------------------------------------------------
+
+# Create South Region
+south_train <- south_train %>% 
+  select(daily_deaths)
+
+# Create an empty data frame to store the results
+south_results <- data.frame(order = character(),
+                           seasonal = character(),
+                           AIC = numeric(),
+                           stringsAsFactors = FALSE)
+
+# Perform grid search
+for (p in p_grid) {
+  for (d in d_grid) {
+    for (q in q_grid) {
+      for (P in P_grid) {
+        for (D in D_grid) {
+          for (Q in Q_grid) {
+            order <- c(p, d, q)
+            seasonal <- c(P, D, Q, s)
+            model <- tryCatch(
+              {
+                fit <- arima(south_train, order = order, seasonal = seasonal)
+                AIC_val <- AIC(fit)
+                # Append the results to the data frame
+                south_results <- rbind(south_results, data.frame(order = paste(order, collapse = ", "),
+                                                               seasonal = paste(seasonal, collapse = ", "),
+                                                               AIC = AIC_val))
+              },
+              error = function(e) NULL
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
+
+## West Grid Search ------------------------------------------------------------
+
+# Create West Region
+west_train <- west_train %>% 
+  select(daily_deaths)
+
+# Create an empty data frame to store the results
+west_results <- data.frame(order = character(),
+                           seasonal = character(),
+                           AIC = numeric(),
+                           stringsAsFactors = FALSE)
+
+# Perform grid search
+for (p in p_grid) {
+  for (d in d_grid) {
+    for (q in q_grid) {
+      for (P in P_grid) {
+        for (D in D_grid) {
+          for (Q in Q_grid) {
+            order <- c(p, d, q)
+            seasonal <- c(P, D, Q, s)
+            model <- tryCatch(
+              {
+                fit <- arima(west_train, order = order, seasonal = seasonal)
+                AIC_val <- AIC(fit)
+                # Append the results to the data frame
+                west_results <- rbind(west_results, data.frame(order = paste(order, collapse = ", "),
+                                                               seasonal = paste(seasonal, collapse = ", "),
+                                                               AIC = AIC_val))
+              },
+              error = function(e) NULL
+            )
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+
+```{r eval = FALSE}
+save(east_results, midwest_results, south_results, west_results, file = "results/sarima_grid.rda")
+```
+
+```{r}
+load("results/sarima_grid.rda")
+```
+
+
+#### Best East SARIMA
+```{r}
+# Find the best model (minimum AIC)
+best_east_model <- east_results[which.min(east_results$AIC), ]
+print(best_east_model)
+```
+
+#### Best Midwest SARIMA
+```{r}
+# Midwest Results
+# Find the best model (minimum AIC)
+best_midwest_model <- midwest_results[which.min(midwest_results$AIC), ]
+print(best_midwest_model)
+```
+
+#### Best South SARIMA
+```{r}
+# South Results
+# Find the best model (minimum AIC)
+best_south_model <- south_results[which.min(south_results$AIC), ]
+print(best_south_model)
+
+```
+
+#### Best West SARIMA
+```{r}
+# Find the best model (minimum AIC)
+best_west_model <- west_results[which.min(west_results$AIC), ]
+print(best_west_model)
+```
+
+
+### 7.4 Rebuilding SARIMA
+```{r}
+# Rebuilding SARIMA Models -----------------------------------------------------
+east_sarima <- arima(east_train_ts, order = c(5, 0, 4), 
+                     seasonal = list(order = c(0, 1, 1), period = 12))
+midwest_sarima <- arima(midwest_train_ts, order = c(5, 1, 5),
+                        seasonal = list(order = c(0, 0, 1), period = 12))
+south_sarima <- arima(south_train_ts, order = c(5, 1, 5),
+                           seasonal = list(order = c(0, 0, 0), period = 12))
+west_sarima <- arima(west_train_ts, order = c(5, 0, 5),
+                     seasonal = list(order = c(1, 1, 0), period = 12))
+
+
+## Forecasting with the NEW SARIMA model ---------------------------------------
+east_values <- forecast(east_sarima, h = length(east_test_ts))
+midwest_values <- forecast(midwest_sarima, h = length(midwest_test_ts))
+south_values <- forecast(south_sarima, h = length(south_test_ts))
+west_values <- forecast(west_sarima, h = length(west_test_ts))
+```
+
+```{r}
+## Plotting & Accuracy
+
+## East Region
+east_tuned_sarima_acc <- forecast::accuracy(east_values)
+
+east_tuned_sarima_acc %>% 
+  kbl(caption = "<center>Tuned SARIMA East Accuracy<center>") %>% 
+  kable_styling()
+
+east_tuned_sarima_plot <- forecast::autoplot(east_values) +
+  geom_line(data = east_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "East Region Tuned SARIMA",
+       y = "Daily Deaths")
+
+east_tuned_sarima_plot
+
+
+## Midwest Region
+midwest_tuned_sarima_acc <- forecast::accuracy(midwest_values)
+
+midwest_tuned_sarima_acc %>% 
+  kbl(caption = "<center>Tuned SARIMA Midwest Accuracy<center>") %>% 
+  kable_styling()
+
+midwest_tuned_sarima_plot <- forecast::autoplot(midwest_values) +
+  geom_line(data = midwest_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "Midwest Region Tuned SARIMA",
+       y = "Daily Deaths")
+
+midwest_tuned_sarima_plot
+
+
+
+## South Region
+south_tuned_sarima_acc <- forecast::accuracy(south_values)
+
+south_tuned_sarima_acc %>% 
+  kbl(caption = "<center>Tuned SARIMA South Accuracy<center>") %>% 
+  kable_styling()
+
+south_tuned_sarima_plot <- forecast::autoplot(south_values) +
+  geom_line(data = south_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "South Region Tuned SARIMA",
+       y = "Daily Deaths")
+
+south_tuned_sarima_plot
+
+
+
+## West Region
+west_tuned_sarima_acc <- forecast::accuracy(west_values)
+
+west_tuned_sarima_acc %>% 
+  kbl(caption = "<center>Tuned SARIMA West Accuracy<center>") %>% 
+  kable_styling()
+
+west_tuned_sarima_plot <- forecast::autoplot(west_values) +
+  geom_line(data = west_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "West Region Tuned SARIMA",
+       y = "Daily Deaths")
+
+west_tuned_sarima_plot
+
+```
+
+
+```{r eval = FALSE}
+# saving results
+save(east_tuned_sarima_acc, east_initial_sarima_acc, east_initial_sarima_plot, east_tuned_sarima_plot,
+     midwest_tuned_sarima_acc, midwest_initial_sarima_acc, midwest_initial_sarima_plot, midwest_tuned_sarima_plot,
+     south_tuned_sarima_acc, south_initial_sarima_acc, south_initial_sarima_plot, south_tuned_sarima_plot,
+     west_tuned_sarima_acc, west_initial_sarima_acc, west_initial_sarima_plot, west_tuned_sarima_plot,
+     file = "results/uni_sarima.rda"
+     )
+```
+
+
+## 8. Auto ARIMA Model
+
+### 8.1 Building AutoARIMA
+```{r}
+# Building AutoARIMA Model -----------------------------------------------------
+east_arima <- auto.arima(east_train_ts, seasonal = TRUE)
+midwest_arima <- auto.arima(midwest_train_ts, seasonal = TRUE)
+south_arima <- auto.arima(south_train_ts, seasonal = TRUE)
+west_arima <- auto.arima(west_train_ts, seasonal = TRUE)
+
+# Summary of the ARIMA model
+summary(east_arima)
+summary(midwest_arima)
+summary(south_arima)
+summary(west_arima)
+
+## Forecasting Test Data -------------------------------------------------------
+east_values <- forecast(east_arima, h = length(east_test_ts))
+midwest_values <- forecast(midwest_arima, h = length(midwest_test_ts))
+south_values <- forecast(south_arima, h = length(south_test_ts))
+west_values <- forecast(west_arima, h = length(west_test_ts))
+```
+
+
+### 8.2 Accuracy
+```{r}
+## Plotting & Accuracy
+
+## East Region
+east_auto_acc <- forecast::accuracy(east_values)
+
+east_auto_acc  %>% 
+  kbl(caption = "<center>Auto ARIMA East Accuracy<center>") %>% 
+  kable_styling()
+
+east_auto_plot <- forecast::autoplot(east_values) +
+  geom_line(data = east_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "East Region Auto ARIMA",
+       y = "Daily Deaths")
+
+east_auto_plot 
+
+
+## Midwest Region
+midwest_auto_acc <- forecast::accuracy(midwest_values)
+
+midwest_auto_acc %>% 
+  kbl(caption = "<center>Auto ARIMA Midwest Accuracy<center>") %>% 
+  kable_styling()
+
+midwest_auto_plot <- forecast::autoplot(midwest_values) +
+  geom_line(data = midwest_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "Midwest Region Auto ARIMA",
+       y = "Daily Deaths")
+
+midwest_auto_plot 
+
+
+
+## South Region
+south_auto_acc <- forecast::accuracy(south_values)
+
+south_auto_acc %>% 
+  kbl(caption = "<center>Auto ARIMA South Accuracy<center>") %>% 
+  kable_styling()
+
+south_auto_plot <- forecast::autoplot(south_values) +
+  geom_line(data = south_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "South Region Auto ARIMA",
+       y = "Daily Deaths")
+
+south_auto_plot
+
+
+
+## West Region
+west_auto_acc <- forecast::accuracy(west_values)
+
+west_auto_acc %>% 
+  kbl(caption = "<center>Auto ARIMA West Accuracy<center>") %>% 
+  kable_styling()
+
+west_auto_plot <- forecast::autoplot(west_values) +
+  geom_line(data = west_test_plot, aes(x = num, y = daily_deaths)) +
+  scale_x_continuous(limits = c(950,1136),
+                     breaks = c(977, 1023, 1069, 1115),
+                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "West Region Auto ARIMA",
+       y = "Daily Deaths")
+
+west_auto_plot
+
+```
+
+```{r eval = FALSE}
+# saving results
+save(east_auto_plot,
+     midwest_auto_plot,
+     south_auto_plot,
+     west_auto_plot,
+     east_auto_acc,
+     midwest_auto_acc,
+     south_auto_acc,
+     west_auto_acc,
+     file = "results/uni_autoarima.rda")
+```
+
+
+## 9. Compare Arima Models
+```{r}
+load("results/uni_arima.rda")
+load("results/uni_sarima.rda")
+load("results/uni_autoarima.rda")
+```
+
+### East Results
+```{r}
+east1 <- east_initial_arima_acc %>% 
+  as.data.frame()
+
+east2 <- east_tuned_arima_acc %>% 
+  as.data.frame()
+
+east3 <- east_initial_sarima_acc%>% 
+  as.data.frame() 
+
+east4 <- east_tuned_sarima_acc%>% 
+  as.data.frame()
+
+east5 <- east_auto_acc%>% 
+  as.data.frame()
+
+tribble(
+  ~model, ~mae, ~mase,
+  #--|--|----
+  "initial arima", east1$MAE, east1$MASE,
+  "tuned arima", east2$MAE, east2$MASE,
+  "initial sarima", east3$MAE, east3$MASE,
+  "tuned sarima", east4$MAE, east4$MASE,
+  "auto arima", east5$MAE, east5$MASE,
+) %>% 
+  kbl() %>% 
+  kable_styling()
+
+```
+
+### Midwest Results
+```{r}
+midwest1 <- midwest_initial_arima_acc %>% 
+  as.data.frame()
+
+midwest2 <- midwest_tuned_arima_acc %>% 
+  as.data.frame()
+
+midwest3 <- midwest_initial_sarima_acc%>% 
+  as.data.frame() 
+
+midwest4 <- midwest_tuned_sarima_acc%>% 
+  as.data.frame()
+
+midwest5 <- midwest_auto_acc%>% 
+  as.data.frame()
+
+tribble(
+  ~model, ~mae, ~mase,
+  #--|--|----
+  "initial arima", midwest1$MAE, midwest1$MASE,
+  "tuned arima", midwest2$MAE, midwest2$MASE,
+  "initial sarima", midwest3$MAE, midwest3$MASE,
+  "tuned sarima", midwest4$MAE, midwest4$MASE,
+  "auto arima", midwest5$MAE, midwest5$MASE,
+) %>% 
+  kbl() %>% 
+  kable_styling()
+
+```
+
+### South Results
+```{r}
+south1 <- south_initial_arima_acc %>% 
+  as.data.frame()
+
+south2 <- south_tuned_arima_acc %>% 
+  as.data.frame()
+
+south3 <- south_initial_sarima_acc%>% 
+  as.data.frame() 
+
+south4 <- south_tuned_sarima_acc%>% 
+  as.data.frame()
+
+south5 <- south_auto_acc%>% 
+  as.data.frame()
+
+tribble(
+  ~model, ~mae, ~mase,
+  #--|--|----
+  "initial arima", south1$MAE, south1$MASE,
+  "tuned arima", south2$MAE, south2$MASE,
+  "initial sarima", south3$MAE, south3$MASE,
+  "tuned sarima", south4$MAE, south4$MASE,
+  "auto arima", south5$MAE, south5$MASE,
+) %>% 
+  kbl() %>% 
+  kable_styling()
+
+```
+
+
+### West Results
+```{r}
+west1 <- west_initial_arima_acc %>% 
+  as.data.frame()
+
+west2 <- west_tuned_arima_acc %>% 
+  as.data.frame()
+
+west3 <- west_initial_sarima_acc%>% 
+  as.data.frame() 
+
+west4 <- west_tuned_sarima_acc%>% 
+  as.data.frame()
+
+west5 <- west_auto_acc%>% 
+  as.data.frame()
+
+tribble(
+  ~model, ~mae, ~mase,
+  #--|--|----
+  "initial arima", west1$MAE, west1$MASE,
+  "tuned arima", west2$MAE, west2$MASE,
+  "initial sarima", west3$MAE, west3$MASE,
+  "tuned sarima", west4$MAE, west4$MASE,
+  "auto arima", west5$MAE, west5$MASE,
+) %>% 
+  kbl() %>% 
+  kable_styling()
+
+```
+
