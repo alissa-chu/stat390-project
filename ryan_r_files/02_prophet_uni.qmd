@@ -89,206 +89,1082 @@ west_train <- training(west_splits)
 west_test <- testing(west_splits)
 ```
 
-## 3. Building Prophet Models
+## 3. Baseline Models
+
+### 3.1 Building Baseline Models
 ```{r}
 
 ## Total -----------------------------------------------------------------------
 ### Initialize & Fit the Prophet ----
-total_prophet <- prophet(total_train)
+total_baseline_prophet <- prophet(total_train)
 
 ### Forecast Future Predictions ----
-total_future <- make_future_dataframe(total_prophet, periods = nrow(total_test), freq = "day")
-total_forecast <- predict(total_prophet, total_future)
+total_baseline_future <- make_future_dataframe(total_baseline_prophet, periods = nrow(total_test), freq = "day")
+total_baseline_forecast <- predict(total_baseline_prophet, total_baseline_future)
 
 
 ## East Region -----------------------------------------------------------------
 ### Initialize & Fit the Prophet ----
-east_prophet <- prophet(east_train)
+east_baseline_prophet <- prophet(east_train)
 
 ### Forecast Future Predictions ----
-east_future <- make_future_dataframe(east_prophet, periods = nrow(east_test), freq = "day")
-east_forecast <- predict(east_prophet, east_future)
+east_baseline_future <- make_future_dataframe(east_baseline_prophet, periods = nrow(east_test), freq = "day")
+east_baseline_forecast <- predict(east_baseline_prophet, east_baseline_future)
 
 
 ### Initialize & Fit the Prophet ----
-midwest_prophet <- prophet(midwest_train)
+midwest_baseline_prophet <- prophet(midwest_train)
 
 ### Forecast Future Predictions ----
-midwest_future <- make_future_dataframe(midwest_prophet, periods = nrow(midwest_test), freq = "day")
-midwest_forecast <- predict(midwest_prophet, midwest_future)
+midwest_baseline_future <- make_future_dataframe(midwest_baseline_prophet, periods = nrow(midwest_test), freq = "day")
+midwest_baseline_forecast <- predict(midwest_baseline_prophet, midwest_baseline_future)
 
 
 ## South Region -----------------------------------------------------------------
 ### Initialize & Fit the Prophet ----
-south_prophet <- prophet(south_train)
+south_baseline_prophet <- prophet(south_train)
 
 ### Forecast Future Predictions ----
-south_future <- make_future_dataframe(south_prophet, periods = nrow(south_test), freq = "day")
-south_forecast <- predict(south_prophet, south_future)
+south_baseline_future <- make_future_dataframe(south_baseline_prophet, periods = nrow(south_test), freq = "day")
+south_baseline_forecast <- predict(south_baseline_prophet, south_baseline_future)
 
 
 ## West Region -----------------------------------------------------------------
 ### Initialize & Fit the Prophet ----
-west_prophet <- prophet(west_train)
+west_baseline_prophet <- prophet(west_train)
 
 ### Forecast Future Predictions ----
-west_future <- make_future_dataframe(west_prophet, periods = nrow(west_test), freq = "day")
-west_forecast <- predict(west_prophet, west_future)
+west_baseline_future <- make_future_dataframe(west_baseline_prophet, periods = nrow(west_test), freq = "day")
+west_baseline_forecast <- predict(west_baseline_prophet, west_baseline_future)
 ```
 
-## 4. Plotting Forecasts
+### 3.1 Plotting Forecasts
 
 ```{r}
-plot(total_prophet, total_forecast) +
+plot(total_baseline_prophet, total_baseline_forecast) +
   geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
   theme_minimal() +
-  labs(title = "Total Univariate Prophet",
+  labs(title = "Total Baseline Univariate Prophet",
        x = "Date",
        y = "Daily Deaths")
 
-east_prophet_plot <- plot(east_prophet, east_forecast) +
+prophet_plot_components(total_baseline_prophet, total_baseline_forecast) 
+
+east_baseline_prophet_plot <- plot(east_baseline_prophet, east_baseline_forecast) +
   theme_minimal() +
-  labs(title = "East Univariate Prophet",
+  labs(title = "East Baseline Univariate Prophet",
        x = "Date",
        y = "Daily Deaths")
 
-east_prophet_plot
+east_baseline_prophet_plot
 
-midwest_prophet_plot <- plot(midwest_prophet, midwest_forecast) +
+prophet_plot_components(east_baseline_prophet, east_baseline_forecast) 
+
+midwest_baseline_prophet_plot <- plot(midwest_baseline_prophet, midwest_baseline_forecast) +
   theme_minimal() +
-  labs(title = "Midwest Univariate Prophet",
+  labs(title = "Midwest Baseline Univariate Prophet",
        x = "Date",
        y = "Daily Deaths")
 
-midwest_prophet_plot 
+midwest_baseline_prophet_plot 
 
-south_prophet_plot <- plot(south_prophet, south_forecast) +
+prophet_plot_components(midwest_baseline_prophet, midwest_baseline_forecast) 
+
+south_baseline_prophet_plot <- plot(south_baseline_prophet, south_baseline_forecast) +
   theme_minimal() +
-  labs(title = "South Univariate Prophet",
+  labs(title = "South Baseline Univariate Prophet",
        x = "Date",
        y = "Daily Deaths")
 
-south_prophet_plot
+south_baseline_prophet_plot
 
-west_prophet_plot <- plot(west_prophet, west_forecast) +
+prophet_plot_components(south_baseline_prophet, south_baseline_forecast) 
+
+west_baseline_prophet_plot <- plot(west_baseline_prophet, west_baseline_forecast) +
   theme_minimal() +
-  labs(title = "West Univariate Prophet",
+  labs(title = "West Baseline Univariate Prophet",
        x = "Date",
        y = "Daily Deaths")
 
-west_prophet_plot
+west_baseline_prophet_plot
+
+prophet_plot_components(west_baseline_prophet, west_baseline_forecast) 
 
 ```
 
 
-## 5. Model Accuracy
+### 3.2. Baseline Accuracy
 ```{r}
 ## Total Prophet ----------------------------------------------------------------
-total_forecast2 <- total_forecast %>% 
+total_forecast2 <- total_baseline_forecast %>% 
   filter(ds >=  as.POSIXct("2022-08-07"))
 
 performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
   select(ds, y, yhat)
 
 # Check MAE value
-total_mae <- mae(performance_total$y, performance_total$yhat)
-print(paste("The MAE for the total model is", total_mae))
+total_baseline_mae <- mae(performance_total$y, performance_total$yhat)
+print(paste("The MAE for the total model is", total_baseline_mae))
 
 # Check MASE value
-total_mase <- mase(performance_total$y, performance_total$yhat)
-print(paste("The MASE for the total model is", total_mase))
+total_baseline_mase <- mase(performance_total$y, performance_total$yhat)
+print(paste("The MASE for the total model is", total_baseline_mase))
 ```
 
-### East
+#### East
 ```{r}
 ## east Prophet ----------------------------------------------------------------
-east_forecast2 <- east_forecast %>% 
+east_forecast2 <- east_baseline_forecast %>% 
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
   select(ds, y, yhat)
 
 # Check MAE value
-east_prophet_mae<- mae(performance_east$y, performance_east$yhat)
-print(paste("The MAE for the East model is", east_prophet_mae))
+east_baseline_prophet_mae <- mae(performance_east$y, performance_east$yhat)
+print(paste("The MAE for the East model is", east_baseline_prophet_mae))
 
 # Check MASE value
-east_prophet_mase <- mase(performance_east$y, performance_east$yhat)
-print(paste("The MASE for the East model is", east_prophet_mase))
+east_baseline_prophet_mase <- mase(performance_east$y, performance_east$yhat)
+print(paste("The MASE for the East model is", east_baseline_prophet_mase))
 
 ```
 
-### Midwest
+#### Midwest
 ```{r}
 ## Midwest Prophet ----------------------------------------------------------------
-midwest_forecast2 <- midwest_forecast %>% 
+midwest_forecast2 <- midwest_baseline_forecast %>% 
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
   select(ds, y, yhat)
 
 # Check MAE value
-midwest_prophet_mae<- mae(performance_midwest$y, performance_midwest$yhat)
-print(paste("The MAE for the Midwest model is", midwest_prophet_mae))
+midwest_baseline_prophet_mae<- mae(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MAE for the Midwest model is", midwest_baseline_prophet_mae))
 
 # Check MASE value
-midwest_prophet_mase <- mase(performance_midwest$y, performance_midwest$yhat)
-print(paste("The MASE for the Midwest model is", midwest_prophet_mase))
+midwest_baseline_prophet_mase <- mase(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MASE for the Midwest model is", midwest_baseline_prophet_mase))
 ```
 
-### South 
+#### South 
 ```{r}
 ## South Prophet ----------------------------------------------------------------
-south_forecast2 <- south_forecast %>% 
+south_forecast2 <- south_baseline_forecast %>% 
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
   select(ds, y, yhat)
 
 # Check MAE value
-south_prophet_mae<- mae(performance_south$y, performance_south$yhat)
-print(paste("The MAE for the South model is", south_prophet_mae))
+south_baseline_prophet_mae<- mae(performance_south$y, performance_south$yhat)
+print(paste("The MAE for the South model is", south_baseline_prophet_mae))
 
 # Check MASE value
-south_prophet_mase <- mase(performance_south$y, performance_south$yhat)
-print(paste("The MASE for the South model is", south_prophet_mase))
+south_baseline_prophet_mase <- mase(performance_south$y, performance_south$yhat)
+print(paste("The MASE for the South model is", south_baseline_prophet_mase))
 ```
 
-### West
+#### West
 ```{r}
 ## West Prophet ----------------------------------------------------------------
-west_forecast2 <- west_forecast %>% 
+west_forecast2 <- west_baseline_forecast %>% 
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
   select(ds, y, yhat)
 
 # Check MAE value
-west_prophet_mae<- mae(performance_west$y, performance_west$yhat)
-print(paste("The MAE for the West model is", west_prophet_mae))
+west_baseline_prophet_mae<- mae(performance_west$y, performance_west$yhat)
+print(paste("The MAE for the West model is", west_baseline_prophet_mae))
 
 # Check MASE value
-west_prophet_mase <- mase(performance_west$y, performance_west$yhat)
-print(paste("The MASE for the West model is", west_prophet_mase))
+west_baseline_prophet_mase <- mase(performance_west$y, performance_west$yhat)
+print(paste("The MASE for the West model is", west_baseline_prophet_mase))
 
 ```
 
 ```{r eval = FALSE}
 # save results
 save(
-  east_prophet_plot,
-  midwest_prophet_plot,
-  south_prophet_plot,
-  west_prophet_plot,
-  east_prophet_mae,
-  east_prophet_mase,
-  midwest_prophet_mae,
-  midwest_prophet_mase,
-  south_prophet_mae,
-  south_prophet_mase,
-  west_prophet_mae,
-  west_prophet_mase,
-  file = "results/uni_prophet.rda"
+  east_baseline_prophet_plot,
+  midwest_baseline_prophet_plot,
+  south_baseline_prophet_plot,
+  west_baseline_prophet_plot,
+  east_baseline_prophet_mae,
+  east_baseline_prophet_mase,
+  midwest_baseline_prophet_mae,
+  midwest_baseline_prophet_mase,
+  south_baseline_prophet_mae,
+  south_baseline_prophet_mase,
+  west_baseline_prophet_mae,
+  west_baseline_prophet_mase,
+  file = "results/uni_baseline_prophet.rda"
 )
+```
+
+## 4. Tuning Changepoints
+
+### 4.1 Plot Default Changepoints
+
+#### Total 
+```{r}
+# Total
+plot(total_baseline_prophet, total_baseline_forecast) + add_changepoints_to_plot(total_baseline_prophet)
+```
+
+#### East
+```{r}
+# East
+plot(east_baseline_prophet, east_baseline_forecast) + add_changepoints_to_plot(east_baseline_prophet)
+```
+
+#### Midwest
+```{r}
+# Midwest
+plot(midwest_baseline_prophet, midwest_baseline_forecast) + add_changepoints_to_plot(midwest_baseline_prophet)
+```
+
+#### South
+```{r}
+# South
+plot(south_baseline_prophet, south_baseline_forecast) + add_changepoints_to_plot(south_baseline_prophet)
+```
+
+#### West
+```{r}
+# West
+plot(west_baseline_prophet, west_baseline_forecast) + add_changepoints_to_plot(west_baseline_prophet)
+
+```
+
+```{r}
+# Create prophet model with CI of 95%
+total_changepoint <- prophet(total_train, interval.width = 0.95, n.changepoints = 2)
+
+east_changepoint <- prophet(east_train, interval.width = 0.95, n.changepoints = 4)
+
+midwest_changepoint <- prophet(midwest_train, interval.width = 0.95, n.changepoints = 3)
+
+south_changepoint <- prophet(south_train, interval.width = 0.95, n.changepoints = 3)
+
+west_changepoint <- prophet(west_train, interval.width = 0.95, n.changepoints = 4)
+
+
+```
+
+
+### 4.2 New Changepoints Model Forecast
+
+#### Total
+```{r}
+# Create time range for forecast
+total_changepoint_future <- make_future_dataframe(total_changepoint, freq = "day", periods = nrow(total_test))
+
+# Make prediction
+total_changepoint_forecast <- predict(total_changepoint, total_changepoint_future )
+
+# Visualize the forecast
+plot(total_changepoint, total_changepoint_forecast ) +
+  labs(title = "Total Changepoint Prophet Model")
+```
+
+#### East
+```{r}
+# Create time range for forecast
+east_changepoint_future <- make_future_dataframe(east_changepoint, freq = "day", periods = nrow(east_test))
+
+# Make prediction
+east_changepoint_forecast <- predict(east_changepoint, east_changepoint_future )
+
+# Visualize the forecast
+plot(east_changepoint, east_changepoint_forecast ) +
+  labs(title = "East Changepoint Prophet Model")
+```
+
+
+#### Midwest
+```{r}
+# Create time range for forecast
+midwest_changepoint_future <- make_future_dataframe(midwest_changepoint, freq = "day", periods = nrow(midwest_test))
+
+# Make prediction
+midwest_changepoint_forecast <- predict(midwest_changepoint, midwest_changepoint_future )
+
+# Visualize the forecast
+plot(midwest_changepoint, midwest_changepoint_forecast ) +
+  labs(title = "Midwest Changepoint Prophet Model")
+```
+
+
+#### South
+```{r}
+# Create time range for forecast
+south_changepoint_future <- make_future_dataframe(south_changepoint, freq = "day", periods = nrow(south_test))
+
+# Make prediction
+south_changepoint_forecast <- predict(south_changepoint, south_changepoint_future )
+
+# Visualize the forecast
+plot(south_changepoint, south_changepoint_forecast ) +
+  labs(title = "South Changepoint Prophet Model")
+```
+
+
+#### West
+```{r}
+# Create time range for forecast
+west_changepoint_future <- make_future_dataframe(west_changepoint, freq = "day", periods = nrow(west_test))
+
+# Make prediction
+west_changepoint_forecast <- predict(west_changepoint, west_changepoint_future )
+
+# Visualize the forecast
+plot(west_changepoint, west_changepoint_forecast ) +
+  labs(title = "West Changepoint Prophet Model")
+```
+
+### 4.3 Changepoint Accuracy
+```{r}
+## Total Prophet ----------------------------------------------------------------
+total_forecast2 <- total_changepoint_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-08-07"))
+
+performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+total_changepoint_mae <- mae(performance_total$y, performance_total$yhat)
+print(paste("The MAE for the total changepoint model is", total_changepoint_mae))
+
+# Check MASE value
+total_changepoint_mase <- mase(performance_total$y, performance_total$yhat)
+print(paste("The MASE for the total changepoint model is", total_changepoint_mase))
+```
+
+```{r}
+## east Prophet ----------------------------------------------------------------
+east_forecast2 <- east_changepoint_forecast %>% 
+  filter(ds > as.POSIXct("2022-11-29"))
+
+performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+east_changepoint_mae <- mae(performance_east$y, performance_east$yhat)
+print(paste("The MAE for the east changepoint model is", east_changepoint_mae))
+
+# Check MASE value
+east_changepoint_mase <- mase(performance_east$y, performance_east$yhat)
+print(paste("The MASE for the east changepoint model is", east_changepoint_mase))
+```
+
+```{r}
+## midwest Prophet ----------------------------------------------------------------
+midwest_forecast2 <- midwest_changepoint_forecast %>% 
+  filter(ds > as.POSIXct("2022-11-29"))
+
+performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+midwest_changepoint_mae <- mae(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MAE for the midwest changepoint model is", midwest_changepoint_mae))
+
+# Check MASE value
+midwest_changepoint_mase <- mase(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MASE for the midwest changepoint model is", midwest_changepoint_mase))
+```
+
+```{r}
+## south Prophet ----------------------------------------------------------------
+south_forecast2 <- south_changepoint_forecast %>% 
+  filter(ds > as.POSIXct("2022-11-29"))
+
+performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+south_changepoint_mae <- mae(performance_south$y, performance_south$yhat)
+print(paste("The MAE for the south changepoint model is", south_changepoint_mae))
+
+# Check MASE value
+south_changepoint_mase <- mase(performance_south$y, performance_south$yhat)
+print(paste("The MASE for the south changepoint model is", south_changepoint_mase))
+```
+
+```{r}
+## west Prophet ----------------------------------------------------------------
+west_forecast2 <- west_changepoint_forecast %>% 
+  filter(ds > as.POSIXct("2022-11-29"))
+
+performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+west_changepoint_mae <- mae(performance_west$y, performance_west$yhat)
+print(paste("The MAE for the west changepoint model is", west_changepoint_mae))
+
+# Check MASE value
+west_changepoint_mase <- mase(performance_west$y, performance_west$yhat)
+print(paste("The MASE for the west changepoint model is", west_changepoint_mase))
+```
+
+
+## 5. Seasonality Models
+
+### 5.1 Build Models with Seasonality
+
+```{r}
+## Total -----------------------------------------------------------------------
+### Initialize & Fit the Prophet ----
+total_season_prophet <- prophet(total_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+
+### Forecast Future Predictions ----
+total_season_future <- make_future_dataframe(total_season_prophet, periods = nrow(total_test), freq = "day")
+total_season_forecast <- predict(total_season_prophet, total_season_future)
+
+
+## East Region -----------------------------------------------------------------
+### Initialize & Fit the Prophet ----
+east_season_prophet <- prophet(east_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+
+### Forecast Future Predictions ----
+east_season_future <- make_future_dataframe(east_season_prophet, periods = nrow(east_test), freq = "day")
+east_season_forecast <- predict(east_season_prophet, east_season_future)
+
+
+### Initialize & Fit the Prophet ----
+midwest_season_prophet <- prophet(midwest_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+
+### Forecast Future Predictions ----
+midwest_season_future <- make_future_dataframe(midwest_season_prophet, periods = nrow(midwest_test), freq = "day")
+midwest_season_forecast <- predict(midwest_season_prophet, midwest_season_future)
+
+
+## South Region -----------------------------------------------------------------
+### Initialize & Fit the Prophet ----
+south_season_prophet <- prophet(south_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+
+### Forecast Future Predictions ----
+south_season_future <- make_future_dataframe(south_season_prophet, periods = nrow(south_test), freq = "day")
+south_season_forecast <- predict(south_season_prophet, south_season_future)
+
+
+## West Region -----------------------------------------------------------------
+### Initialize & Fit the Prophet ----
+west_season_prophet <- prophet(west_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+
+### Forecast Future Predictions ----
+west_season_future <- make_future_dataframe(west_season_prophet, periods = nrow(west_test), freq = "day")
+west_season_forecast <- predict(west_season_prophet, west_season_future)
+```
+
+
+
+### 5.2 Plotting Forecasts
+
+```{r}
+plot(total_season_prophet, total_season_forecast) +
+  geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
+  theme_minimal() +
+  labs(title = "Total Season Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+prophet_plot_components(total_season_prophet, total_season_forecast) 
+
+east_season_prophet_plot <- plot(east_season_prophet, east_season_forecast) +
+  theme_minimal() +
+  labs(title = "East season Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+east_season_prophet_plot
+
+prophet_plot_components(east_season_prophet, east_season_forecast) 
+
+midwest_season_prophet_plot <- plot(midwest_season_prophet, midwest_season_forecast) +
+  theme_minimal() +
+  labs(title = "Midwest season Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+midwest_season_prophet_plot 
+
+prophet_plot_components(midwest_season_prophet, midwest_season_forecast) 
+
+south_season_prophet_plot <- plot(south_season_prophet, south_season_forecast) +
+  theme_minimal() +
+  labs(title = "South season Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+south_season_prophet_plot
+
+prophet_plot_components(south_season_prophet, south_season_forecast) 
+
+west_season_prophet_plot <- plot(west_season_prophet, west_season_forecast) +
+  theme_minimal() +
+  labs(title = "West season Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+west_season_prophet_plot
+
+prophet_plot_components(west_season_prophet, west_season_forecast) 
+
+```
+
+
+### 5.3 Season Accuracy
+```{r}
+## Total Prophet ----------------------------------------------------------------
+total_forecast2 <- total_season_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-08-07"))
+
+performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+total_season_mae <- mae(performance_total$y, performance_total$yhat)
+print(paste("The MAE for the total model is", total_season_mae))
+
+# Check MASE value
+total_season_mase <- mase(performance_total$y, performance_total$yhat)
+print(paste("The MASE for the total model is", total_season_mase))
+```
+
+#### East
+```{r}
+## east Prophet ----------------------------------------------------------------
+east_forecast2 <- east_season_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+east_season_prophet_mae <- mae(performance_east$y, performance_east$yhat)
+print(paste("The MAE for the East model is", east_season_prophet_mae))
+
+# Check MASE value
+east_season_prophet_mase <- mase(performance_east$y, performance_east$yhat)
+print(paste("The MASE for the East model is", east_season_prophet_mase))
+
+```
+
+#### Midwest
+```{r}
+## Midwest Prophet ----------------------------------------------------------------
+midwest_forecast2 <- midwest_season_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+midwest_season_prophet_mae<- mae(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MAE for the Midwest model is", midwest_season_prophet_mae))
+
+# Check MASE value
+midwest_season_prophet_mase <- mase(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MASE for the Midwest model is", midwest_season_prophet_mase))
+```
+
+#### South 
+```{r}
+## South Prophet ----------------------------------------------------------------
+south_forecast2 <- south_season_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+south_season_prophet_mae<- mae(performance_south$y, performance_south$yhat)
+print(paste("The MAE for the South model is", south_season_prophet_mae))
+
+# Check MASE value
+south_season_prophet_mase <- mase(performance_south$y, performance_south$yhat)
+print(paste("The MASE for the South model is", south_season_prophet_mase))
+```
+
+#### West
+```{r}
+## West Prophet ----------------------------------------------------------------
+west_forecast2 <- west_season_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+west_season_prophet_mae<- mae(performance_west$y, performance_west$yhat)
+print(paste("The MAE for the West model is", west_season_prophet_mae))
+
+# Check MASE value
+west_season_prophet_mase <- mase(performance_west$y, performance_west$yhat)
+print(paste("The MASE for the West model is", west_season_prophet_mase))
+
+```
+
+## 6. Holiday and Event Effect
+```{r}
+events <- tribble(
+  ~holiday, ~ds, ~lower_window, ~upper_window,
+  #--|--|----
+  "COVID", as.Date('2020-03-14'), -15, 15,
+  "superbowl", as.Date('2020-02-02'), -7, 7,
+  "superbowl", as.Date('2021-02-07'), -7, 7,
+  "superbowl", as.Date('2022-02-13'), -7, 7,
+)
+
+events
+```
+### 6.1 Build Holiday Model
+```{r}
+total_holiday <- prophet(total_train, holidays = events, fit = FALSE)
+
+# Add built-in country-specific holidays
+total_holiday <- add_country_holidays(total_holiday, country_name = 'US')
+
+# Fit model on training
+total_holiday_prophet <- fit.prophet(total_holiday, total_train)
+```
+
+```{r}
+east_holiday <- prophet(east_train, holidays = events, fit = FALSE)
+
+# Add built-in country-specific holidays
+east_holiday <- add_country_holidays(east_holiday, country_name = 'US')
+
+# Fit model on training
+east_holiday_prophet <- fit.prophet(east_holiday, east_train)
+```
+
+```{r}
+midwest_holiday <- prophet(midwest_train, holidays = events, fit = FALSE)
+
+# Add built-in country-specific holidays
+midwest_holiday <- add_country_holidays(midwest_holiday, country_name = 'US')
+
+# Fit model on training
+midwest_holiday_prophet <- fit.prophet(midwest_holiday, midwest_train)
+```
+
+```{r}
+south_holiday <- prophet(south_train, holidays = events, fit = FALSE)
+
+# Add built-in country-specific holidays
+south_holiday <- add_country_holidays(south_holiday, country_name = 'US')
+
+# Fit model on training
+south_holiday_prophet <- fit.prophet(south_holiday, south_train)
+```
+
+
+```{r}
+west_holiday <- prophet(west_train, holidays = events, fit = FALSE)
+
+# Add built-in country-specific holidays
+west_holiday <- add_country_holidays(west_holiday, country_name = 'US')
+
+# Fit model on training
+west_holiday_prophet <- fit.prophet(west_holiday, west_train)
+```
+
+
+### 6.2 Holiday Model Forecast
+```{r}
+### Forecast Future Predictions ----
+total_holiday_future <- make_future_dataframe(total_holiday_prophet, periods = nrow(total_test), freq = "day")
+total_holiday_forecast <- predict(total_holiday_prophet, total_holiday_future)
+
+### East ----
+east_holiday_future <- make_future_dataframe(east_holiday_prophet, periods = nrow(east_test), freq = "day")
+east_holiday_forecast <- predict(east_holiday_prophet, east_holiday_future)
+
+### Midwest ----
+midwest_holiday_future <- make_future_dataframe(midwest_holiday_prophet, periods = nrow(midwest_test), freq = "day")
+midwest_holiday_forecast <- predict(midwest_holiday_prophet, midwest_holiday_future)
+
+### South ----
+south_holiday_future <- make_future_dataframe(south_holiday_prophet, periods = nrow(south_test), freq = "day")
+south_holiday_forecast <- predict(south_holiday_prophet, south_holiday_future)
+
+### West ----
+west_holiday_future <- make_future_dataframe(west_holiday_prophet, periods = nrow(west_test), freq = "day")
+west_holiday_forecast <- predict(west_holiday_prophet, west_holiday_future)
+
+```
+
+
+### 6.3 Plotting Forecasts
+
+```{r}
+plot(total_holiday_prophet, total_holiday_forecast) +
+  geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
+  theme_minimal() +
+  labs(title = "Total holiday Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+prophet_plot_components(total_holiday_prophet, total_holiday_forecast) 
+
+east_holiday_prophet_plot <- plot(east_holiday_prophet, east_holiday_forecast) +
+  theme_minimal() +
+  labs(title = "East holiday Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+east_holiday_prophet_plot
+
+prophet_plot_components(east_holiday_prophet, east_holiday_forecast) 
+
+midwest_holiday_prophet_plot <- plot(midwest_holiday_prophet, midwest_holiday_forecast) +
+  theme_minimal() +
+  labs(title = "Midwest holiday Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+midwest_holiday_prophet_plot 
+
+prophet_plot_components(midwest_holiday_prophet, midwest_holiday_forecast) 
+
+south_holiday_prophet_plot <- plot(south_holiday_prophet, south_holiday_forecast) +
+  theme_minimal() +
+  labs(title = "South holiday Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+south_holiday_prophet_plot
+
+prophet_plot_components(south_holiday_prophet, south_holiday_forecast) 
+
+west_holiday_prophet_plot <- plot(west_holiday_prophet, west_holiday_forecast) +
+  theme_minimal() +
+  labs(title = "West holiday Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+west_holiday_prophet_plot
+
+prophet_plot_components(west_holiday_prophet, west_holiday_forecast) 
+
+```
+
+
+
+### 6.4 Holiday Accuracy
+```{r}
+## Total Prophet ----------------------------------------------------------------
+total_forecast2 <- total_holiday_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-08-07"))
+
+performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+total_holiday_mae <- mae(performance_total$y, performance_total$yhat)
+print(paste("The MAE for the total model is", total_holiday_mae))
+
+# Check MASE value
+total_holiday_mase <- mase(performance_total$y, performance_total$yhat)
+print(paste("The MASE for the total model is", total_holiday_mase))
+```
+
+#### East
+```{r}
+## east Prophet ----------------------------------------------------------------
+east_forecast2 <- east_holiday_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+east_holiday_prophet_mae <- mae(performance_east$y, performance_east$yhat)
+print(paste("The MAE for the East model is", east_holiday_prophet_mae))
+
+# Check MASE value
+east_holiday_prophet_mase <- mase(performance_east$y, performance_east$yhat)
+print(paste("The MASE for the East model is", east_holiday_prophet_mase))
+
+```
+
+#### Midwest
+```{r}
+## Midwest Prophet ----------------------------------------------------------------
+midwest_forecast2 <- midwest_holiday_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+midwest_holiday_prophet_mae<- mae(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MAE for the Midwest model is", midwest_holiday_prophet_mae))
+
+# Check MASE value
+midwest_holiday_prophet_mase <- mase(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MASE for the Midwest model is", midwest_holiday_prophet_mase))
+```
+
+#### South 
+```{r}
+## South Prophet ----------------------------------------------------------------
+south_forecast2 <- south_holiday_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+south_holiday_prophet_mae<- mae(performance_south$y, performance_south$yhat)
+print(paste("The MAE for the South model is", south_holiday_prophet_mae))
+
+# Check MASE value
+south_holiday_prophet_mase <- mase(performance_south$y, performance_south$yhat)
+print(paste("The MASE for the South model is", south_holiday_prophet_mase))
+```
+
+#### West
+```{r}
+## West Prophet ----------------------------------------------------------------
+west_forecast2 <- west_holiday_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+west_holiday_prophet_mae<- mae(performance_west$y, performance_west$yhat)
+print(paste("The MAE for the West model is", west_holiday_prophet_mae))
+
+# Check MASE value
+west_holiday_prophet_mase <- mase(performance_west$y, performance_west$yhat)
+print(paste("The MASE for the West model is", west_holiday_prophet_mase))
+
+```
+
+## 7. Best Models
+
+### 7.1 Build Best Models 
+```{r}
+# Total
+# changepoint, holiday, season
+total_best <- prophet(total_train, holidays = events, n.changepoints = 2, yearly.seasonality = FALSE, weekly.seasonality = FALSE, fit = FALSE)
+
+# Add built-in country-specific holidays
+total_best <- add_country_holidays(total_best, country_name = 'US')
+
+# Fit model on training
+total_best_prophet <- fit.prophet(total_best, total_train)
+
+# East
+# seasonality
+east_best_prophet <- prophet(east_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+
+# Midwest
+# holiday and seasonality
+midwest_best <- prophet(midwest_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE, holidays = events, fit = FALSE)
+midwest_best <- add_country_holidays(midwest_best, country_name = 'US')
+midwest_best_prophet <- fit.prophet(midwest_best, midwest_train)
+
+# South
+# holiday and seasonality
+south_best <- prophet(south_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE, holidays = events, fit = FALSE)
+south_best <- add_country_holidays(south_best, country_name = 'US')
+south_best_prophet <- fit.prophet(south_best, south_train)
+
+# West
+# holiday and seasonality
+west_best <- prophet(west_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE, holidays = events, fit = FALSE)
+west_best <- add_country_holidays(west_best, country_name = 'US')
+west_best_prophet <- fit.prophet(west_best, west_train)
+```
+### 7.2 Forecast Best Models
+```{r}
+### Forecast Future Predictions ----
+total_best_future <- make_future_dataframe(total_best_prophet, periods = nrow(total_test), freq = "day")
+total_best_forecast <- predict(total_best_prophet, total_best_future)
+
+### East ----
+east_best_future <- make_future_dataframe(east_best_prophet, periods = nrow(east_test), freq = "day")
+east_best_forecast <- predict(east_best_prophet, east_best_future)
+
+### Midwest ----
+midwest_best_future <- make_future_dataframe(midwest_best_prophet, periods = nrow(midwest_test), freq = "day")
+midwest_best_forecast <- predict(midwest_best_prophet, midwest_best_future)
+
+### South ----
+south_best_future <- make_future_dataframe(south_best_prophet, periods = nrow(south_test), freq = "day")
+south_best_forecast <- predict(south_best_prophet, south_best_future)
+
+### West ----
+west_best_future <- make_future_dataframe(west_best_prophet, periods = nrow(west_test), freq = "day")
+west_best_forecast <- predict(west_best_prophet, west_best_future)
+
+```
+
+### 7.3 Best Models Plot
+```{r}
+total_best_prophet_plot <- plot(total_best_prophet, total_best_forecast) +
+  geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
+  theme_minimal() +
+  labs(title = "Total best Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+total_best_prophet_plot
+
+prophet_plot_components(total_best_prophet, total_best_forecast) 
+
+east_best_prophet_plot <- plot(east_best_prophet, east_best_forecast) +
+  theme_minimal() +
+  labs(title = "East best Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+east_best_prophet_plot
+
+prophet_plot_components(east_best_prophet, east_best_forecast) 
+
+midwest_best_prophet_plot <- plot(midwest_best_prophet, midwest_best_forecast) +
+  theme_minimal() +
+  labs(title = "Midwest best Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+midwest_best_prophet_plot 
+
+prophet_plot_components(midwest_best_prophet, midwest_best_forecast) 
+
+south_best_prophet_plot <- plot(south_best_prophet, south_best_forecast) +
+  theme_minimal() +
+  labs(title = "South best Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+south_best_prophet_plot
+
+prophet_plot_components(south_best_prophet, south_best_forecast) 
+
+west_best_prophet_plot <- plot(west_best_prophet, west_best_forecast) +
+  theme_minimal() +
+  labs(title = "West best Univariate Prophet",
+       x = "Date",
+       y = "Daily Deaths")
+
+west_best_prophet_plot
+
+prophet_plot_components(west_best_prophet, west_best_forecast) 
+
+```
+
+### 7.4 Best Models Accuracy
+```{r}
+## Total Prophet ----------------------------------------------------------------
+total_forecast2 <- total_best_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-08-07"))
+
+performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+total_best_mae <- mae(performance_total$y, performance_total$yhat)
+print(paste("The MAE for the total model is", total_best_mae))
+
+# Check MASE value
+total_best_mase <- mase(performance_total$y, performance_total$yhat)
+print(paste("The MASE for the total model is", total_best_mase))
+```
+
+#### East
+```{r}
+## east Prophet ----------------------------------------------------------------
+east_forecast2 <- east_best_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+east_best_prophet_mae <- mae(performance_east$y, performance_east$yhat)
+print(paste("The MAE for the East model is", east_best_prophet_mae))
+
+# Check MASE value
+east_best_prophet_mase <- mase(performance_east$y, performance_east$yhat)
+print(paste("The MASE for the East model is", east_best_prophet_mase))
+
+```
+
+#### Midwest
+```{r}
+## Midwest Prophet ----------------------------------------------------------------
+midwest_forecast2 <- midwest_best_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+midwest_best_prophet_mae<- mae(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MAE for the Midwest model is", midwest_best_prophet_mae))
+
+# Check MASE value
+midwest_best_prophet_mase <- mase(performance_midwest$y, performance_midwest$yhat)
+print(paste("The MASE for the Midwest model is", midwest_best_prophet_mase))
+```
+
+#### South 
+```{r}
+## South Prophet ----------------------------------------------------------------
+south_forecast2 <- south_best_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+south_best_prophet_mae<- mae(performance_south$y, performance_south$yhat)
+print(paste("The MAE for the South model is", south_best_prophet_mae))
+
+# Check MASE value
+south_best_prophet_mase <- mase(performance_south$y, performance_south$yhat)
+print(paste("The MASE for the South model is", south_best_prophet_mase))
+```
+
+#### West
+```{r}
+## West Prophet ----------------------------------------------------------------
+west_forecast2 <- west_best_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
+
+# Check MAE value
+west_best_prophet_mae<- mae(performance_west$y, performance_west$yhat)
+print(paste("The MAE for the West model is", west_best_prophet_mae))
+
+# Check MASE value
+west_best_prophet_mase <- mase(performance_west$y, performance_west$yhat)
+print(paste("The MASE for the West model is", west_best_prophet_mase))
+```
+
+
+```{r eval = FALSE}
+# saving best
+save(east_best_prophet_mase, east_best_prophet_mae, east_best_prophet_plot,
+     midwest_best_prophet_mase, midwest_best_prophet_mae, midwest_best_prophet_plot,
+     south_season_prophet_mae, south_season_prophet_mase, south_season_prophet_plot,
+     west_best_prophet_mase, west_best_prophet_mae, west_best_prophet_plot,
+     total_best_mae, total_best_mase, total_best_prophet_plot,
+     file = "results/univariate_prophet.rda"
+     )
+
 ```
 

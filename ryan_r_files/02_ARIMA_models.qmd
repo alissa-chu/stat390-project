@@ -148,7 +148,7 @@ adf_east <- adf.test(east_ts)
 print(adf_east) # p-value is 0.01 < 0.05, implying it is stationary
 
 adf_midwest <- adf.test(midwest_ts)
-print(adf_midwest) # p-value is 0.4919 > 0.05, implying it is NOT stationary
+print(adf_midwest) # p-value is 0.325 > 0.05, implying it is NOT stationary
 midwest_ts <- diff(midwest_ts)
 adf_midwest <- adf.test(midwest_ts)
 print(adf_midwest) # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
@@ -170,11 +170,41 @@ print(adf_west)  # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
 midwest_train_ts <- diff(midwest_train_ts)
 midwest_test_ts <- diff(midwest_test_ts)
 
+midwest_train_ts <- as.data.frame(midwest_train_ts) %>% 
+  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+                                  .default = daily_deaths))
+midwest_test_ts <- as.data.frame(midwest_test_ts) %>% 
+  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+                                  .default = daily_deaths))
+
+midwest_train_ts <- ts(midwest_train_ts)
+midwest_test_ts <- ts(midwest_test_ts)
+
 south_train_ts <- diff(south_train_ts)
 south_test_ts <- diff(south_test_ts)
 
+south_train_ts <- as.data.frame(south_train_ts) %>% 
+  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+                                  .default = daily_deaths))
+south_test_ts <- as.data.frame(south_test_ts) %>% 
+  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+                                  .default = daily_deaths))
+
+south_train_ts <- ts(south_train_ts)
+south_test_ts <- ts(south_test_ts)
+
 west_train_ts <- diff(west_train_ts)
 west_test_ts <- diff(west_test_ts)
+
+west_train_ts <- as.data.frame(west_train_ts) %>% 
+  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+                                  .default = daily_deaths))
+west_test_ts <- as.data.frame(west_test_ts) %>% 
+  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+                                  .default = daily_deaths))
+
+west_train_ts <- ts(west_train_ts)
+west_test_ts <- ts(west_test_ts)
 ```
 ## 4. ACF & PACF Plots
 ```{r}
@@ -603,6 +633,7 @@ south_values <- forecast(south_arima, h = length(south_test_ts))
 west_values <- forecast(west_arima, h = length(west_test_ts))
 
 ## Evaluating Accuracy & Plots -------------------------------------------------
+
 east_tuned_arima_acc <- forecast::accuracy(east_values)
 
 east_tuned_arima_acc %>% 
@@ -736,6 +767,7 @@ east_initial_sarima_plot
 
 
 ## Midwest Region
+
 midwest_initial_sarima_acc <- forecast::accuracy(midwest_values)
 
 midwest_initial_sarima_acc %>% 
@@ -757,8 +789,8 @@ midwest_initial_sarima_plot
 ## South Region
 south_initial_sarima_acc <- forecast::accuracy(south_values)
 
-south_initial_sarima_acc %>% 
-  kbl(caption = "<center>Initial SARIMA South Accuracy<center>") %>% 
+south_initial_sarima_acc %>%
+  kbl(caption = "<center>Initial SARIMA South Accuracy<center>") %>%
   kable_styling()
 
 south_initial_sarima_plot <- forecast::autoplot(south_values) +
@@ -774,6 +806,7 @@ south_initial_sarima_plot
 
 
 ## West Region
+
 west_initial_sarima_acc <- forecast::accuracy(west_values)
 
 west_initial_sarima_acc %>% 
