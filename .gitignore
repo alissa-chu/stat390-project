@@ -2,3 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
+
+
+data/merged_clean.csv
+data/merged_cleaned_processed.csv
+
+.DS_Store
