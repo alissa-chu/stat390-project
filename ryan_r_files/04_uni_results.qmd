@@ -1,0 +1,133 @@
+---
+title: "Univariate Results"
+subtitle: "Predicting COVID-19 Deaths (STAT 390)" 
+author: "Ryan Nguyen"
+
+format:
+  html:
+    toc: true
+    embed-resources: true
+    link-external-newwindow: true
+    code-fold: true
+    
+output:
+  html_document:
+    code_folding: hide
+
+execute:
+  warning: false
+
+from: markdown+emoji 
+---
+
+```{r, echo = FALSE, results = 'hide', message = FALSE}
+library(patchwork)
+library(tidyverse)
+library(kableExtra)
+library(knitr)
+
+load("results/uni_sarima.rda")
+load("results/uni_autoarima.rda")
+load("results/uni_arima.rda")
+# load("results/uni_prophet.rda")
+load("results/univariate_prophet.rda")
+```
+
+## Plots
+
+### East Region
+```{r}
+#| label: East Plots
+east_initial_arima_plot +
+  east_tuned_arima_plot +
+  east_initial_sarima_plot + east_tuned_sarima_plot + east_auto_plot + east_best_prophet_plot + plot_layout(ncol = 2)
+```
+
+### Midwest Region
+```{r}
+#| label: Midwest Plots
+midwest_initial_arima_plot +
+  midwest_tuned_arima_plot +
+  midwest_initial_sarima_plot + 
+  midwest_tuned_sarima_plot + 
+  midwest_auto_plot + 
+  midwest_best_prophet_plot +
+  plot_layout(ncol = 2)
+```
+
+### South Region
+```{r}
+#| label: South Plots
+south_initial_arima_plot +
+  south_tuned_arima_plot +
+  south_initial_sarima_plot + 
+  south_tuned_sarima_plot + 
+  south_auto_plot + 
+  south_season_prophet_plot +
+  plot_layout(ncol = 2)
+```
+
+### West Region 
+```{r}
+#| label: West Plots
+west_initial_arima_plot +
+  west_tuned_arima_plot +
+  west_initial_sarima_plot +
+  west_tuned_sarima_plot + 
+  west_auto_plot + 
+  west_best_prophet_plot +
+  plot_layout(ncol = 2)
+```
+
+
+## Model Accuracy
+```{r}
+as_tibble(rbind(east_initial_arima_acc,
+                east_tuned_arima_acc,
+                east_initial_sarima_acc,
+                east_tuned_sarima_acc,
+                east_auto_acc)) %>% 
+  add_row(tibble_row(MAE = east_best_prophet_mae, MASE = east_best_prophet_mase)) %>% 
+  add_column(model = c("Initial ARIMA", "Tuned ARIMA", "Initial SARIMA", "Tuned SARIMA", "Auto ARIMA", "Prophet")) %>% 
+  select(model, MAE, MASE) %>% 
+  kbl(caption = "<center>East Region<center>") %>% 
+  kable_styling()
+
+
+as_tibble(rbind(midwest_initial_arima_acc,
+                midwest_tuned_arima_acc,
+                midwest_initial_sarima_acc,
+                midwest_tuned_sarima_acc,
+                midwest_auto_acc)) %>% 
+  add_row(tibble_row(MAE = midwest_best_prophet_mae, MASE = midwest_best_prophet_mase)) %>% 
+  add_column(model = c("Initial ARIMA", "Tuned ARIMA", "Initial SARIMA", "Tuned SARIMA", "Auto ARIMA", "Prophet")) %>% 
+  select(model, MAE, MASE) %>% 
+  kbl(caption = "<center>Midwest Region<center>") %>% 
+  kable_styling()
+
+
+as_tibble(rbind(south_initial_arima_acc,
+                south_tuned_arima_acc,
+                south_initial_sarima_acc,
+                south_tuned_sarima_acc,
+                south_auto_acc)) %>% 
+  add_row(tibble_row(MAE = south_season_prophet_mae, MASE = south_season_prophet_mase)) %>% 
+  add_column(model = c("Initial ARIMA", "Tuned ARIMA", "Initial SARIMA", "Tuned SARIMA", "Auto ARIMA", "Prophet")) %>% 
+  select(model, MAE, MASE) %>% 
+  kbl(caption = "<center>South Region<center>") %>% 
+  kable_styling()
+
+
+as_tibble(rbind(west_initial_arima_acc,
+                west_tuned_arima_acc,
+                west_initial_sarima_acc,
+                west_tuned_sarima_acc,
+                west_auto_acc)) %>% 
+  add_row(tibble_row(MAE = west_best_prophet_mae, MASE = west_best_prophet_mase)) %>% 
+  add_column(model = c("Initial ARIMA", "Tuned ARIMA", "Initial SARIMA", "Tuned SARIMA", "Auto ARIMA", "Prophet")) %>% 
+  select(model, MAE, MASE) %>% 
+  kbl(caption = "<center>West Region<center>") %>% 
+  kable_styling()
+
+```
+

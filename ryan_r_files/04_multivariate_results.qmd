@@ -1,0 +1,63 @@
+---
+title: "Multivariate Results"
+subtitle: "Predicting COVID-19 Deaths (STAT 390)" 
+author: "Ryan Nguyen"
+
+format:
+  html:
+    toc: true
+    embed-resources: true
+    link-external-newwindow: true
+    code-fold: true
+    
+output:
+  html_document:
+    code_folding: hide
+
+execute:
+  warning: false
+
+from: markdown+emoji 
+---
+
+## 1. Import Libraries
+
+```{r, echo = FALSE, results = 'hide', message = FALSE}
+library(patchwork)
+library(tidyverse)
+library(kableExtra)
+library(knitr)
+
+load("results/multi_xgboost.rda")
+load("results/multi_prophet.rda")
+```
+
+
+## 2. Plots
+```{r}
+xgplot
+
+ggplot(performance_best) +
+  geom_line(aes(x = ds, y = y, color = "blue"), alpha = 0.7) +
+  geom_point(aes(x = ds, y = y, color = "blue"), alpha = 0.3) +
+  geom_line(aes(x = ds, y = yhat, color = "red"), alpha = 0.7) +
+  geom_point(aes(x = ds, y = yhat, color = "red"), alpha = 0.3) +
+  scale_color_manual(name="Value", values = c("blue", "red"), labels = c("Predicted", "Actual")) +
+  labs(title = "Best Prophet Test Set", 
+       y = "Deaths",
+       x = "Dates") 
+```
+## 3. Comparing Model Accuracy
+```{r}
+tribble(
+  ~model, ~mae, ~mase,
+  #--|--|----
+  "prophet", best_mae, best_mase,
+  "xgboost", xgboost_mae, xgboost_mase
+) %>% 
+  kbl() %>% 
+  kable_styling()
+```
+
+
+
