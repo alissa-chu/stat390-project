@@ -33,7 +33,7 @@ ARIMA is a widely used method for times series forecasting. It is a powerful and
 AutoARIMA is an extension of the ARIMA model that automates the process of selecting the arima model values p, d, and q. It uses a search algorithm to explore different combinations of these parameters and selects a model that minimizes AIC.
 
 SARIMA or Seasonal ARIMA is formed by including additional seasonal terms in the ARIMA models in addition to the non-seasonal orders. A seasonal pattern exists when a series is influenced by seasonal factors. Seasonality is always of a fixed and known period. In the model, we use uppercase notation for the seasonal parts of the model. 
-
+- 
 ## Prophet
 
 Prophet is a forecasting model developed by Facebook that is user-friendly and suitable for a wide range of time series forecasting applications. Prophet is well suited for datasets with missing data points, outliers, and irregular patterns. It decomposes time series data into three components: seasonality, holidays, and trend. Prophet incorporates both yearly and weekly seasonality by default. Prophet allows the incorporation of holiday effects, including allowing users to specify holidays. Finally, prophet models the overall trend in the data, including both linear and non-linear components. 
@@ -49,4 +49,5 @@ In the context of our project, it's important to consider the following for cond
 1. The models we provided, however well performing they might be, may not be fully tuned to their optimal extent, which means the results obtained should not be taken as complete conclusive findings. Further optimization can potentially achieve even better results and even more conclusive results.
 2. It is worth noting that some models may require less fine-tuning to yield reasonably good results. In particular, we found that our Prophet and XGBoost models required less fine-tuning than our ARIMA models, making them attractive choices when time or resources are limited.
 3. When working with time series models, it is important to avoid the leakage of future information. To maintain integrity we proceeded with the following:
-    a). We used lagged features and rolling window statistics to capture past patterns and dependencies in the time series data.
+
+   a). We used lagged features and rolling window statistics to capture past patterns and dependencies in the time series data.
