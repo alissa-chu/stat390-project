@@ -36,7 +36,7 @@ ARIMA Model Performance by Region:
 | Emily      | 57.1463      |  0.5981 |
 | Nishi | 48.453     |  0.622 |
 | Ryan | 47.188     |   0.724 |
-
+</td><td>
 
 | Tables        | Are           | Cool  |
 | ------------- |:-------------:| -----:|
