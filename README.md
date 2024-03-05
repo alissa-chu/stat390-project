@@ -30,6 +30,28 @@ ARIMA is a widely used method for times series forecasting. It is a powerful and
 
 ARIMA Model Performance by Region:
 
+| East Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |  59.725 |  0.674 |
+| Emily      | 57.1463      |  0.5981 |
+| Nishi | 48.453     |  0.622 |
+| Ryan | 47.188     |   0.724 |
+
+
+| Tables        | Are           | Cool  |
+| ------------- |:-------------:| -----:|
+| col 3 is      | right-aligned | $1600 |
+| col 2 is      | centered      |   $12 |
+| zebra stripes | are neat      |    $1 |
+
+
+| Tables        | Are           | Cool  |
+| ------------- |:-------------:| -----:|
+| col 3 is      | right-aligned | $1600 |
+| col 2 is      | centered      |   $12 |
+| zebra stripes | are neat      |    $1 |
+
+
 | Tables        | Are           | Cool  |
 | ------------- |:-------------:| -----:|
 | col 3 is      | right-aligned | $1600 |
