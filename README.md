@@ -36,28 +36,27 @@ ARIMA Model Performance by Region:
 | Emily      | 57.1463      |  0.5981 |
 | Nishi | 48.453     |  0.622 |
 | Ryan | 47.188     |   0.724 |
-</td><td>
 
-| Tables        | Are           | Cool  |
-| ------------- |:-------------:| -----:|
-| col 3 is      | right-aligned | $1600 |
-| col 2 is      | centered      |   $12 |
-| zebra stripes | are neat      |    $1 |
+| Midwest Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |   60.029 |  0.541 |
+| Emily      | 61.101     |  0.532 |
+| Nishi |125.948   |  0.565 |
+| Ryan | 54.436  |  0.515|
 
+| South Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |   91.638 |   0.573 |
+| Emily      | 135.654      |  0.628 |
+| Nishi | 131.212    |  0.530|
+| Ryan | 94.708   |   0.548|
 
-| Tables        | Are           | Cool  |
-| ------------- |:-------------:| -----:|
-| col 3 is      | right-aligned | $1600 |
-| col 2 is      | centered      |   $12 |
-| zebra stripes | are neat      |    $1 |
-
-
-| Tables        | Are           | Cool  |
-| ------------- |:-------------:| -----:|
-| col 3 is      | right-aligned | $1600 |
-| col 2 is      | centered      |   $12 |
-| zebra stripes | are neat      |    $1 |
-
+| West Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |  36.165|  0.451 |
+| Emily      | 37.028    |  0.449|
+| Nishi | 72.550   | 0.616|
+| Ryan | 46.880   |  0.594 |
 
 ## Auto ARIMA / SARIMA
 
@@ -81,7 +80,25 @@ XGBoost Model Performance:
 
 # Model Performance Comparison
 
+## Univariate Models Key Findings
 
+Best models by region:
+East - Prophet 
+Midwest - Prophet
+South - SARIMA
+West - SARIMA
+
+Because there is a seasonality component to our data, the Prophet and SARIMA models performed better than the ARIMA model. Additionally, we chose SARIMA over Auto ARIMA. SARIMA is specifically designed to handle seasonal time series data. Since we know from our PACF and ACF graphs that there is seasonality in our data, SARIMA is potentially more accurate and interpretable. Additionally, SARIMA may provide a better means of finding the optimal parameters. SARIMA grid search is exhaustive: grid search exhaustively tests combinations within these specified ranges. Auto ARIMA search is stepwise: with the iterative and stepwise nature of auto arima it may not be as adept as SARIMA at finding the optimal parameters
+
+Next, We found that setting yearly_seasonality = False worked better for our univariate prophets. If we included yearly_seasonality, our model overfit to the spikes in deaths in January 2021 and 2022 in our train data. Without including external factors such as vaccines, this led to the model predicting a spike in January 2023 in our test data that did not exist in the actual values.
+
+## Multivariate Models Key Findings
+
+For the Multivariate Prophet model, setting both Yearly and Weekly Seasonality = TRUE as well as adding holidays and regressors helped the model performance. 
+
+However, XGBoost was the best multivariate model. The most important features found from the feature importance of the model were: mmwr_week, lag / date features (half year, one year), additional doses, and distributed doses.
+
+The overall best model was XGBoost with MAE of 16.199 and MASE of 0.00687.
 
 # Caveats and Remarks
 
