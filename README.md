@@ -10,7 +10,7 @@ Through this initiative, we hope to provide a robust analysis of the relationshi
 
 # Data
 
-Our original data sources are the Centers for Disease Control and Prevention and the NYTIMES Coronavirus (Covid-19) Stats for the United States. Our original vaccination data and weekly death data come from the CDC while our daily death data comes from the NYTIMES Coronavirus (Covid-19) Stats for the United States (found on Kaggle.) Our multivariate time series models required data preparation. We cleaned the weekly death and vaccine datasets separately before merging the two together and cleaning further. This is the dataset we will use in this project for our multivariate models. For our univariate models, we split our daily death dataset into 4 datasets per our 4 regions of focus: East, Midwest, South, and West. These datasets: `east_daily`, `midwest_daily`, `south_daily`, and `west_daily` will be used for our univariate models and consist of a date column and a daily deaths column. We did not use our weekly death dataset for these models because there were too few observations per region.
+Our original data sources are the Centers for Disease Control and Prevention and the NYTIMES Coronavirus (Covid-19) Stats for the United States. Our original vaccination data and weekly death data come from the CDC while our daily death data comes from the NYTIMES Coronavirus (Covid-19) Stats for the United States (found on Kaggle.) Our multivariate time series models required data preparation. We cleaned the weekly death and vaccine datasets separately before merging the two together and cleaning further. This is the dataset we will use in this project for our multivariate models. For our univariate models, we split our daily death dataset into 4 datasets per our 4 regions of focus: East, Midwest, South, and West. These datasets: `east_daily`, `midwest_daily`, `south_daily`, and `west_daily` will be used for our univariate models and consist of a date column and a daily deaths column. We did not use our weekly death dataset for these models because there were too few observations per region (the maximum number of rows we could have with weekly data was only around 200). Our final datasets had 1136 rows for our univariate models and 7306 rows and 91 columns for our multivariate models.
 
 # Models
 
@@ -64,13 +64,77 @@ AutoARIMA is an extension of the ARIMA model that automates the process of selec
 
 Auto ARIMA / SARIMA Model Performance by Region:
 
+| East Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |  52.947 |   0.597|
+| Emily      | 50.0504     | 0.565 |
+| Nishi | 73.042   | 0.622 |
+| Ryan | 46.104    |  0.716|
+
+| Midwest Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |  52.602 |    0.474|
+| Emily      | 52.955   |0.477 |
+| Nishi | 84.702 | 0.565 |
+| Ryan | 47.448   |  0.435|
+
+| South Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |  85.775 | 0.536|
+| Emily      | 98.629   |0.510|
+| Nishi | 147.473| 0.533 |
+| Ryan |85.738  | 0.496|
+
+| West Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |  29.869|  0.373|
+| Emily      | 33.100   |0.417|
+| Nishi | 69.751| 0.616 |
+| Ryan |36.964 |0.456|
+
 ## Prophet
 
 Prophet is a forecasting model developed by Facebook that is user-friendly and suitable for a wide range of time series forecasting applications. Prophet is well suited for datasets with missing data points, outliers, and irregular patterns. It decomposes time series data into three components: seasonality, holidays, and trend. Prophet incorporates both yearly and weekly seasonality by default. Prophet allows the incorporation of holiday effects, including allowing users to specify holidays. Finally, prophet models the overall trend in the data, including both linear and non-linear components. 
 
 Univariate Prophet Model Performance by Region:
 
+| East Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |  42.219 |  0.476|
+| Emily      | 57.2004    | 0.5987|
+| Nishi | 66.281| 0.9994 |
+| Ryan | 64.132  | 0.724|
+
+| Midwest Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |  51.291 |  0.443|
+| Emily      | 71.0213 | 0.607|
+| Nishi | 110.562| 1.001|
+| Ryan | 92.441 | 0.798|
+
+| South Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |  105.05 |  0.543|
+| Emily      | 132.388 | 0.612|
+| Nishi | 157.526|0.999|
+| Ryan | 173.927| 0.899|
+
+| West Region      | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |   42.053 |  0.470|
+| Emily      | 68.016 | 0.733|
+| Nishi | 76.569|1.009|
+| Ryan | 74.746| 0.835|
+
 Multivariate Prophet Model Performance:
+
+|     | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |   49.972 |  0.818|
+| Emily      | 66.842 | 0.0266|
+| Nishi |77.815|0.0215|
+| Ryan | 35.980 | 0.589|
+
 
 ## XGBoost
 
@@ -78,15 +142,18 @@ XGBoost, short for eXtreme Gradient Boosting, is a powerful and versatile machin
 
 XGBoost Model Performance:
 
+|     | MAE          | MASE  |   
+| ------------- |-------------| -----|
+| Alissa      |    16.199|  0.00687|
+| Emily      | 17.633 | 0.00748|
+| Nishi |18.736|0.00794|
+| Ryan |16.838 | 0.00745|
+
 # Model Performance Comparison
 
 ## Univariate Models Key Findings
 
-Best models by region:
-East - Prophet 
-Midwest - Prophet
-South - SARIMA
-West - SARIMA
+Best models by region: East: Prophet, Midwest: Prophet, South: SARIMA, West: SARIMA
 
 Because there is a seasonality component to our data, the Prophet and SARIMA models performed better than the ARIMA model. Additionally, we chose SARIMA over Auto ARIMA. SARIMA is specifically designed to handle seasonal time series data. Since we know from our PACF and ACF graphs that there is seasonality in our data, SARIMA is potentially more accurate and interpretable. Additionally, SARIMA may provide a better means of finding the optimal parameters. SARIMA grid search is exhaustive: grid search exhaustively tests combinations within these specified ranges. Auto ARIMA search is stepwise: with the iterative and stepwise nature of auto arima it may not be as adept as SARIMA at finding the optimal parameters
 
@@ -96,7 +163,7 @@ Next, We found that setting yearly_seasonality = False worked better for our uni
 
 For the Multivariate Prophet model, setting both Yearly and Weekly Seasonality = TRUE as well as adding holidays and regressors helped the model performance. 
 
-However, XGBoost was the best multivariate model. The most important features found from the feature importance of the model were: mmwr_week, lag / date features (half year, one year), additional doses, and distributed doses.
+However, XGBoost was the best multivariate model. The most important features found from the feature importance of the model were: mmwr_week, lag / date features (half year, one year), additional doses, and distributed doses. First, The Morbidity and Mortality Weekly Report (Mmwr_week) was an important feature because it provides accurate and timely information on the mortality rate. We also added lag and rolling window statistic using half year, year, year and a half, and two years as our lags/windows. This was based on our ACF which showed appropriate graph spikes around 26 weeks, 52 weeks, 78 weeks, and 104 weeks. Lastly, adding the additional doses and distributed doses improved the XGBoost model because it provided an accurate count of deaths since the vaccine distribution was significant in improving mortality rates. 
 
 The overall best model was XGBoost with MAE of 16.199 and MASE of 0.00687.
 
