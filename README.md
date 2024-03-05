@@ -28,6 +28,28 @@ ARIMA is a widely used method for times series forecasting. It is a powerful and
 - Integrated (I): it represents the differencing of the time series data to make it stationary, stabilizing the mean and variance and helping to remove trends and seasonality.
 - Moving Average (MA): accounts for the relationship between an observation and a weighted average of past prediction errors
 
+ EAST
+parameters
+MAE
+MASE
+Alissa
+6, 0, 6
+59.725
+0.674
+Emily
+5, 1, 6
+57.1463
+0.5981
+Nishi
+5, 1, 4
+48.453
+0.622
+Ryan
+5, 0, 5
+47.188
+0.724
+
+
 ## Auto ARIMA / SARIMA
 
 AutoARIMA is an extension of the ARIMA model that automates the process of selecting the arima model values p, d, and q. It uses a search algorithm to explore different combinations of these parameters and selects a model that minimizes AIC. SARIMA or Seasonal ARIMA is formed by including additional seasonal terms in the ARIMA models in addition to the non-seasonal orders. A seasonal pattern exists when a series is influenced by seasonal factors. Seasonality is always of a fixed and known period. In the model, we use uppercase notation for the seasonal parts of the model. 
