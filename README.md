@@ -131,7 +131,7 @@ Multivariate Prophet Model Performance:
 |     | MAE          | MASE  |   
 | ------------- |-------------| -----|
 | Alissa      |   49.972 |  0.818|
-| Emily      | 66.842 | 0.0266|
+| Emily      | 58.586 | 0.0233|
 | Nishi |77.815|0.0215|
 | Ryan | 35.980 | 0.589|
 
