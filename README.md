@@ -6,7 +6,7 @@ This is the Stat 390 Data Science Capstone final project repository for our team
 
 Our objective is to analyze COVID-19 vaccination data in order to predict COVID-19 death rates within 4 US regions: East, Midwest, South, and West. Though we used the same vaccination data for univariate and multivariate models, our death data had a different temporal focus for the two. For our univariate models, our death data was daily. For our multivariate models, our death data was weekly. 
 
-Through this initiative, we hope to provide a robust analysis of the relationship between vaccination rates and death and assist vaccine manufacturers, health professionals, and government officials to prevent future COVID-19 deaths.
+Through this initiative, we hope to provide a robust analysis of the relationship between vaccination rates and death and assist vaccine manufacturers, health professionals, and government officials to prevent future COVID-19 deaths. 
 
 # Data
 
