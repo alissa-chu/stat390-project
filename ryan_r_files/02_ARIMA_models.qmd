@@ -331,6 +331,23 @@ west_values <- forecast(west_arima, h = length(west_test_ts))
 ```
 
 ### 6.2 Accuracy
+
+```{r}
+## Set Up Plots
+east_test_plot <- as.data.frame(east_test_ts) %>% 
+  mutate(num = seq(1023, (1023+113)))
+
+midwest_test_plot <- as.data.frame(midwest_test_ts) %>% 
+  mutate(num = seq(1023, (1023+112)))
+
+south_test_plot <- as.data.frame(south_test_ts) %>% 
+  mutate(num = seq(1023, (1023+112)))
+
+west_test_plot <- as.data.frame(west_test_ts) %>% 
+  mutate(num = seq(1023, (1023+112)))
+
+```
+
 ```{r}
 ## Evaluating Accuracy ---------------------------------------------------------
 east_initial_arima_acc <- forecast::accuracy(east_values)
@@ -339,20 +356,24 @@ east_initial_arima_acc %>%
   kbl(caption = "<center>Initial East Accuracy<center>") %>% 
   kable_styling()
 
-### East Region
-east_test_plot <- as.data.frame(east_test_ts) %>% 
-  mutate(num = seq(1023, (1023+113)))
+east_pred <- as.data.frame(east_values$mean)
 
-east_initial_arima_plot <- forecast::autoplot(east_values) +
-  geom_line(data = east_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+east_pred2 <- cbind(east_pred, east_test_plot)
+
+### East Region
+east_initial_arima_plot <-ggplot(east_pred2) +
+  geom_line(aes(x = num, y = daily_deaths), color = "dodgerblue", linewidth = .75) +
+  geom_line(aes(x = num, y = x), color = "orange", linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Nov 2022", "Jan 2023", "March 2023")) +
   labs(title = "East Region Initial ARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("orange", "dodgerblue"), labels = c("Actual", "Predicted"))+
+  theme_bw()
 
 east_initial_arima_plot
-
 
 ### Midwest Region
 
@@ -362,16 +383,21 @@ midwest_initial_arima_acc %>%
   kbl(caption = "<center>Initial Midwest Accuracy<center>") %>% 
   kable_styling()
 
-midwest_test_plot <- as.data.frame(midwest_test_ts) %>% 
-  mutate(num = seq(1023, (1023+112)))
+midwest_pred <- as.data.frame(midwest_values$mean)
 
-midwest_initial_arima_plot <- forecast::autoplot(midwest_values) +
-  geom_line(data = midwest_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
-  labs(title = "Midwest Region Initial ARIMA",
-       y = "Daily Deaths")
+midwest_pred2 <- cbind(midwest_pred, midwest_test_plot)
+
+midwest_initial_arima_plot <-ggplot(midwest_pred2) +
+  geom_line(aes(x = num, y = daily_deaths), color = "dodgerblue", linewidth = .75) +
+  geom_line(aes(x = num, y = x), color = "orange", linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Nov 2022", "Jan 2023", "March 2023")) +
+  labs(title = "midwest Region Initial ARIMA",
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("orange", "dodgerblue"), labels = c("Actual", "Predicted"))+
+  theme_bw()
 
 midwest_initial_arima_plot
 
@@ -384,18 +410,22 @@ south_initial_arima_acc %>%
   kbl(caption = "<center>Initial South Accuracy<center>") %>% 
   kable_styling()
 
-south_test_plot <- as.data.frame(south_test_ts) %>% 
-  mutate(num = seq(1023, (1023+112)))
+south_pred <- as.data.frame(south_values$mean)
 
-south_initial_arima_plot <- forecast::autoplot(south_values) +
-  geom_line(data = south_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+south_pred2 <- cbind(south_pred, south_test_plot)
+south_initial_arima_plot <-ggplot(south_pred2) +
+  geom_line(aes(x = num, y = daily_deaths), color = "dodgerblue", linewidth = .75) +
+  geom_line(aes(x = num, y = x), color = "orange", linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Nov 2022", "Jan 2023", "March 2023")) +
   labs(title = "South Region Initial ARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("orange", "dodgerblue"), labels = c("Actual", "Predicted"))+
+  theme_bw()
 
-south_initial_arima_plot 
+south_initial_arima_plot
 
 
 ### West Region
@@ -406,16 +436,21 @@ west_initial_arima_acc %>%
   kbl(caption = "<center>Initial West Accuracy<center>") %>% 
   kable_styling()
 
-west_test_plot <- as.data.frame(west_test_ts) %>% 
-  mutate(num = seq(1023, (1023+112)))
+west_pred <- as.data.frame(west_values$mean)
 
-west_initial_arima_plot <- forecast::autoplot(west_values) +
-  geom_line(data = west_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+west_pred2 <- cbind(west_pred, west_test_plot)
+
+west_initial_arima_plot <-ggplot(west_pred2) +
+  geom_line(aes(x = num, y = daily_deaths), color = "dodgerblue", linewidth = .75) +
+  geom_line(aes(x = num, y = x), color = "orange", linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Nov 2022", "Jan 2023", "March 2023")) +
   labs(title = "West Region Initial ARIMA",
-       y = "Daily Deaths") 
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("orange", "dodgerblue"), labels = c("Actual", "Predicted"))+
+  theme_bw()
 
 west_initial_arima_plot
 
@@ -640,17 +675,25 @@ east_tuned_arima_acc %>%
   kbl(caption = "<center>Tuned East Accuracy<center>") %>% 
   kable_styling()
 
+east_pred <- as.data.frame(east_values$mean)
+
+east_pred2 <- cbind(east_pred, east_test_plot)
+
 ### East Region
-east_tuned_arima_plot <- forecast::autoplot(east_values) +
-  geom_line(data = east_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+east_tuned_arima_plot <-ggplot(east_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Nov 2022", "Jan 2023", "March 2023")) +
   labs(title = "East Region Tuned ARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted"))+
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 east_tuned_arima_plot
-
 
 ### Midwest Region
 
@@ -660,16 +703,28 @@ midwest_tuned_arima_acc %>%
   kbl(caption = "<center>Tuned Midwest Accuracy<center>") %>% 
   kable_styling()
 
-midwest_tuned_arima_plot <- forecast::autoplot(midwest_values) +
-  geom_line(data = midwest_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+midwest_pred <- as.data.frame(midwest_values$mean)
+
+midwest_pred2 <- cbind(midwest_pred, midwest_test_plot)
+
+midwest_pred2 <- midwest_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+midwest_tuned_arima_plot <-ggplot(midwest_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
   labs(title = "Midwest Region Tuned ARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 midwest_tuned_arima_plot
-
 
 ### South Region
 
@@ -679,15 +734,28 @@ south_tuned_arima_acc %>%
   kbl(caption = "<center>Tuned South Accuracy<center>") %>% 
   kable_styling()
 
-south_tuned_arima_plot <- forecast::autoplot(south_values) +
-  geom_line(data = south_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
-  labs(title = "South Region Tuned ARIMA",
-       y = "Daily Deaths")
+south_pred <- as.data.frame(south_values$mean)
 
-south_tuned_arima_plot 
+south_pred2 <- cbind(south_pred, south_test_plot)
+
+south_pred2 <- south_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+south_tuned_arima_plot <-ggplot(south_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
+  labs(title = "South Region Tuned ARIMA",
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
+
+south_tuned_arima_plot
 
 
 ### West Region
@@ -697,13 +765,26 @@ west_tuned_arima_acc %>%
   kbl(caption = "<center>Tuned West Accuracy<center>") %>% 
   kable_styling()
 
-west_tuned_arima_plot <- forecast::autoplot(west_values) +
-  geom_line(data = west_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+west_pred <- as.data.frame(west_values$mean)
+
+west_pred2 <- cbind(west_pred, west_test_plot)
+
+west_pred2 <- west_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+west_tuned_arima_plot <-ggplot(west_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
   labs(title = "West Region Tuned ARIMA",
-       y = "Daily Deaths") 
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 west_tuned_arima_plot
 
@@ -712,7 +793,7 @@ west_tuned_arima_plot
 ```{r eval = FALSE}
 # saving results
 save(east_tuned_arima_acc, east_initial_arima_acc, east_initial_arima_plot, east_tuned_arima_plot,
-     midwest_tuned_arima_acc, midwest_initial_arima_acc, midwest_initial_arima_plot, midwest_tuned_arima_plot,
+     midwest_tuned_arima_acc, midwest_initial_arima_acc, midwest_initial_arima_plot,midwest_tuned_arima_plot,
      south_tuned_arima_acc, south_initial_arima_acc, south_initial_arima_plot, south_tuned_arima_plot,
      west_tuned_arima_acc, west_initial_arima_acc, west_initial_arima_plot, west_tuned_arima_plot,
      file = "results/uni_arima.rda"
@@ -755,13 +836,23 @@ east_initial_sarima_acc %>%
   kbl(caption = "<center>Initial SARIMA East Accuracy<center>") %>% 
   kable_styling()
 
-east_initial_sarima_plot <- forecast::autoplot(east_values) +
-  geom_line(data = east_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+east_pred <- as.data.frame(east_values$mean)
+
+east_pred2 <- cbind(east_pred, east_test_plot)
+
+### East Region
+east_initial_sarima_plot <-ggplot(east_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Nov 2022", "Jan 2023", "March 2023")) +
   labs(title = "East Region Initial SARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted"))+
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 east_initial_sarima_plot
 
@@ -774,13 +865,26 @@ midwest_initial_sarima_acc %>%
   kbl(caption = "<center>Initial SARIMA Midwest Accuracy<center>") %>% 
   kable_styling()
 
-midwest_initial_sarima_plot <- forecast::autoplot(midwest_values) +
-  geom_line(data = midwest_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+midwest_pred <- as.data.frame(midwest_values$mean)
+
+midwest_pred2 <- cbind(midwest_pred, midwest_test_plot)
+
+midwest_pred2 <- midwest_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+midwest_initial_sarima_plot <-ggplot(midwest_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
   labs(title = "Midwest Region Initial SARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 midwest_initial_sarima_plot
 
@@ -793,13 +897,26 @@ south_initial_sarima_acc %>%
   kbl(caption = "<center>Initial SARIMA South Accuracy<center>") %>%
   kable_styling()
 
-south_initial_sarima_plot <- forecast::autoplot(south_values) +
-  geom_line(data = south_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
-  labs(title = "South Region Initial SARIMA",
-       y = "Daily Deaths")
+south_pred <- as.data.frame(south_values$mean)
+
+south_pred2 <- cbind(south_pred, south_test_plot)
+
+south_pred2 <- south_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+south_initial_sarima_plot <-ggplot(south_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
+  labs(title = "South Region Initial SsARIMA",
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 south_initial_sarima_plot
 
@@ -813,13 +930,26 @@ west_initial_sarima_acc %>%
   kbl(caption = "<center>Initial SARIMA West Accuracy<center>") %>% 
   kable_styling()
 
-west_initial_sarima_plot <- forecast::autoplot(west_values) +
-  geom_line(data = west_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+west_pred <- as.data.frame(west_values$mean)
+
+west_pred2 <- cbind(west_pred, west_test_plot)
+
+west_pred2 <- west_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+west_initial_sarima_plot <-ggplot(west_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
   labs(title = "West Region Initial SARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 west_initial_sarima_plot
 
@@ -833,9 +963,9 @@ p_grid <- 0:5  # AR parameter
 d_grid <- 0:0  # Differencing parameter
 q_grid <- 0:5  # MA parameter
 P_grid <- 0:1  # Seasonal AR parameter
-D_grid <- 0:1  # Seasonal differencing parameter
+D_grid <- 0:0  # Seasonal differencing parameter
 Q_grid <- 0:1  # Seasonal MA parameter
-s <- 12        # Seasonal period
+s <- 7         # Seasonal period
 
 
 
@@ -878,8 +1008,8 @@ for (p in p_grid) {
   }
 }
 
-d_grid <- 0:1  # Differencing parameter
-
+d_grid <- 1  # Differencing parameter
+D_grid <- 1  # Differencing parameter
 ## Midwest Grid Search ------------------------------------------------------------
 
 # Create Midwest Region
@@ -1045,13 +1175,13 @@ print(best_west_model)
 ```{r}
 # Rebuilding SARIMA Models -----------------------------------------------------
 east_sarima <- arima(east_train_ts, order = c(5, 0, 4), 
-                     seasonal = list(order = c(0, 1, 1), period = 12))
+                     seasonal = list(order = c(1, 1, 1), period = 7))
 midwest_sarima <- arima(midwest_train_ts, order = c(5, 1, 5),
-                        seasonal = list(order = c(0, 0, 1), period = 12))
+                        seasonal = list(order = c(1, 1, 0), period = 7))
 south_sarima <- arima(south_train_ts, order = c(5, 1, 5),
-                           seasonal = list(order = c(0, 0, 0), period = 12))
-west_sarima <- arima(west_train_ts, order = c(5, 0, 5),
-                     seasonal = list(order = c(1, 1, 0), period = 12))
+                           seasonal = list(order = c(1, 1, 1), period = 7))
+west_sarima <- arima(west_train_ts, order = c(0, 1, 3),
+                     seasonal = list(order = c(1, 1, 1), period = 7))
 
 
 ## Forecasting with the NEW SARIMA model ---------------------------------------
@@ -1071,31 +1201,56 @@ east_tuned_sarima_acc %>%
   kbl(caption = "<center>Tuned SARIMA East Accuracy<center>") %>% 
   kable_styling()
 
-east_tuned_sarima_plot <- forecast::autoplot(east_values) +
-  geom_line(data = east_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+east_pred <- as.data.frame(east_values$mean)
+
+east_pred2 <- cbind(east_pred, east_test_plot)
+
+
+### East Region
+east_tuned_sarima_plot <-ggplot(east_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Nov 2022", "Jan 2023", "March 2023")) +
   labs(title = "East Region Tuned SARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted"))+
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 east_tuned_sarima_plot
 
 
 ## Midwest Region
+
 midwest_tuned_sarima_acc <- forecast::accuracy(midwest_values)
 
 midwest_tuned_sarima_acc %>% 
   kbl(caption = "<center>Tuned SARIMA Midwest Accuracy<center>") %>% 
   kable_styling()
 
-midwest_tuned_sarima_plot <- forecast::autoplot(midwest_values) +
-  geom_line(data = midwest_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+midwest_pred <- as.data.frame(midwest_values$mean)
+
+midwest_pred2 <- cbind(midwest_pred, midwest_test_plot)
+
+midwest_pred2 <- midwest_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+midwest_tuned_sarima_plot <-ggplot(midwest_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
   labs(title = "Midwest Region Tuned SARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 midwest_tuned_sarima_plot
 
@@ -1104,36 +1259,64 @@ midwest_tuned_sarima_plot
 ## South Region
 south_tuned_sarima_acc <- forecast::accuracy(south_values)
 
-south_tuned_sarima_acc %>% 
-  kbl(caption = "<center>Tuned SARIMA South Accuracy<center>") %>% 
+south_tuned_sarima_acc %>%
+  kbl(caption = "<center>Tuned SARIMA South Accuracy<center>") %>%
   kable_styling()
 
-south_tuned_sarima_plot <- forecast::autoplot(south_values) +
-  geom_line(data = south_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+south_pred <- as.data.frame(south_values$mean)
+
+south_pred2 <- cbind(south_pred, south_test_plot)
+
+south_pred2 <- south_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+south_tuned_sarima_plot <-ggplot(south_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
   labs(title = "South Region Tuned SARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 south_tuned_sarima_plot
 
-
+# mase(south_pred2$daily_deaths, south_pred2$x)
 
 ## West Region
+
 west_tuned_sarima_acc <- forecast::accuracy(west_values)
 
 west_tuned_sarima_acc %>% 
   kbl(caption = "<center>Tuned SARIMA West Accuracy<center>") %>% 
   kable_styling()
 
-west_tuned_sarima_plot <- forecast::autoplot(west_values) +
-  geom_line(data = west_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+west_pred <- as.data.frame(west_values$mean)
+
+west_pred2 <- cbind(west_pred, west_test_plot)
+
+west_pred2 <- west_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+
+west_tuned_sarima_plot <-ggplot(west_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
   labs(title = "West Region Tuned SARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 west_tuned_sarima_plot
 
@@ -1156,7 +1339,7 @@ save(east_tuned_sarima_acc, east_initial_sarima_acc, east_initial_sarima_plot, e
 ### 8.1 Building AutoARIMA
 ```{r}
 # Building AutoARIMA Model -----------------------------------------------------
-east_arima <- auto.arima(east_train_ts, seasonal = TRUE)
+east_arima <- auto.arima(east_train_ts, seasonal = TRUE, max.p = 5, max.q = 5, max.P = 5, max.Q = 5)
 midwest_arima <- auto.arima(midwest_train_ts, seasonal = TRUE)
 south_arima <- auto.arima(south_train_ts, seasonal = TRUE)
 west_arima <- auto.arima(west_train_ts, seasonal = TRUE)
@@ -1186,13 +1369,22 @@ east_auto_acc  %>%
   kbl(caption = "<center>Auto ARIMA East Accuracy<center>") %>% 
   kable_styling()
 
-east_auto_plot <- forecast::autoplot(east_values) +
-  geom_line(data = east_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+east_pred <- as.data.frame(east_values$mean)
+
+east_pred2 <- cbind(east_pred, east_test_plot)
+
+east_auto_plot <- ggplot(east_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Nov 2022", "Jan 2023", "March 2023")) +
   labs(title = "East Region Auto ARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue","orange"), labels = c("Actual", "Predicted"))+
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 east_auto_plot 
 
@@ -1204,13 +1396,26 @@ midwest_auto_acc %>%
   kbl(caption = "<center>Auto ARIMA Midwest Accuracy<center>") %>% 
   kable_styling()
 
-midwest_auto_plot <- forecast::autoplot(midwest_values) +
-  geom_line(data = midwest_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+midwest_pred <- as.data.frame(midwest_values$mean)
+
+midwest_pred2 <- cbind(midwest_pred, midwest_test_plot)
+
+midwest_pred2 <- midwest_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+midwest_auto_plot <-ggplot(midwest_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
   labs(title = "Midwest Region Auto ARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 midwest_auto_plot 
 
@@ -1223,13 +1428,26 @@ south_auto_acc %>%
   kbl(caption = "<center>Auto ARIMA South Accuracy<center>") %>% 
   kable_styling()
 
-south_auto_plot <- forecast::autoplot(south_values) +
-  geom_line(data = south_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+south_pred <- as.data.frame(south_values$mean)
+
+south_pred2 <- cbind(south_pred, south_test_plot)
+
+south_pred2 <- south_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+south_auto_plot <- ggplot(south_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
   labs(title = "South Region Auto ARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 south_auto_plot
 
@@ -1242,13 +1460,26 @@ west_auto_acc %>%
   kbl(caption = "<center>Auto ARIMA West Accuracy<center>") %>% 
   kable_styling()
 
-west_auto_plot <- forecast::autoplot(west_values) +
-  geom_line(data = west_test_plot, aes(x = num, y = daily_deaths)) +
-  scale_x_continuous(limits = c(950,1136),
-                     breaks = c(977, 1023, 1069, 1115),
-                     labels = c("Sept 2022", "Nov 2022", "Jan 2023", "March 2023")) +
+west_pred <- as.data.frame(west_values$mean)
+
+west_pred2 <- cbind(west_pred, west_test_plot)
+
+west_pred2 <- west_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+west_auto_plot <- ggplot(west_pred2) +
+  geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
+  geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
+  scale_x_continuous(limits = c(1023,1136),
+                     breaks = c(1023, 1069, 1115),
+                     labels = c("Dec 2022", "Jan 2023", "March 2023")) +
   labs(title = "West Region Auto ARIMA",
-       y = "Daily Deaths")
+       y = NULL,
+       x = NULL) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 west_auto_plot
 

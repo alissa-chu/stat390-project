@@ -53,12 +53,14 @@ selected_deaths <- read_csv("data/finaldata_selectedfeatures.csv")
 selected_deaths <- fill(selected_deaths, everything())
 
 selected_deaths <- replace(selected_deaths, is.na(selected_deaths), 0)
-
+ 
 naniar::miss_var_summary(selected_deaths)
-
+ 
 selected_deaths <- selected_deaths %>% 
-  mutate(covid_19_deaths = case_when((covid_19_deaths == 0) ~ 1,
-                       .default = covid_19_deaths))
+   mutate(covid_19_deaths = case_when((covid_19_deaths == 0) ~ 1,
+                        .default = covid_19_deaths))  #%>% 
+ # select(-c(starts_with("deaths_"), "dayofweek", "quarter", "month", "dayofyear", "dayofmonth",
+            #"weekofyear"))
 
 #selected_deaths <- selected_deaths %>% 
  # mutate(covid_19_deaths = log(covid_19_deaths))
@@ -75,6 +77,13 @@ train_matrix <- train_data %>%
   select(-c(date, covid_19_deaths)) %>% 
   as.matrix()
 
+train_matrix2 <- train_matrix %>% 
+  xgb.DMatrix
+
+test_matrix2 <- test_data %>% 
+  select(-c(date, covid_19_deaths)) %>% 
+  as.matrix() 
+
 test_matrix <- test_data %>% 
   select(-c(date, covid_19_deaths)) %>% 
   as.matrix() %>% 
@@ -88,7 +97,7 @@ targets <- train_data$covid_19_deaths
 ```{r}
 xgb_trcontrol <- caret::trainControl(
    method = "cv", 
-   number = 5,
+   number = 5, # 5 folds
    allowParallel = TRUE, 
    verboseIter = FALSE, 
    returnData = FALSE
@@ -99,7 +108,7 @@ xgb_grid <- base::expand.grid(
     nrounds = c(100, 200),
     max_depth = c(10, 15, 20), # maximum depth of a tree
     colsample_bytree = seq(0.5), # subsample ratio of columns when construction each tree
-    eta = 0.1, # learning rate
+    eta = 0.01, # learning rate
     gamma = 0, # minimum loss reduction
     min_child_weight = 1,  # minimum sum of instance weight (hessian) needed ina child
     subsample = 1 # subsample ratio of the training instances
@@ -108,10 +117,14 @@ xgb_grid <- base::expand.grid(
 
 
 ```{r eval = FALSE}
+# wlist = list(train = train_matrix2, test = test_matrix)
+
 xgb_model <- caret::train(
    train_matrix, targets,
    trControl = xgb_trcontrol,
    tuneGrid = xgb_grid,
+   #early_stopping_rounds = 10,
+   #watchlist = wlist,
    method = "xgbTree",
    nthread = 1
 )
@@ -137,10 +150,12 @@ xgb_pred <- xgb_model %>% stats::predict(test_data)
 fitted <- xgb_model %>%
     stats::predict(train_data)
 
-xgtrain_predictions <- cbind(fitted, train_data)
+xgtrain_predictions <- cbind(fitted, train_data) %>% 
+  mutate(index = seq(1:6974))
 xgtest_predictions <-cbind(xgb_pred, test_data) %>% 
-  rename(fitted = xgb_pred)
-xgfull_pred <- rbind(xgtrain_predictions, xgtest_predictions)
+  rename(fitted = xgb_pred) %>% 
+  mutate(index = seq(1:332))
+# xgfull_pred <- rbind(xgtrain_predictions, xgtest_predictions)
 
 ```
 
@@ -148,13 +163,14 @@ xgfull_pred <- rbind(xgtrain_predictions, xgtest_predictions)
 
 xgplot <- xgtest_predictions %>% 
   ggplot() +
-  geom_line(aes(x = date, y = fitted, color = "blue")) +
-  geom_point(aes(x = date, y = fitted, color = "blue"), alpha = 0.2) +
-  geom_line(aes(x = date, y = covid_19_deaths, color = "red"), alpha = 0.7) +
-  geom_point(aes(x = date, y = covid_19_deaths, color = "red"), alpha = 0.2) +
+  geom_line(aes(x = index, y = fitted, color = "blue")) +
+  #geom_point(aes(x = index, y = fitted, color = "blue"), alpha = 0.2) +
+  geom_line(aes(x = index, y = covid_19_deaths, color = "red"), alpha = 0.7) +
+  #geom_point(aes(x = index, y = covid_19_deaths, color = "red"), alpha = 0.2) +
   scale_color_manual(name="Value", values = c("blue", "red"), labels = c("Predicted", "Actual")) +
   labs(title = "XGBoost Forecast", 
-       y = "Deaths")
+       y = "Deaths") + 
+  coord_fixed(ratio = .3)
 
 xgplot
 ```
@@ -163,12 +179,12 @@ xgplot
 ## 7. Model Performance
 ```{r}
 # Unlogging the values
-#xgb_pred2 <- as.data.frame(xgb_pred) %>% 
- # mutate(xgb_pred = exp(xgb_pred))
-
-#test_data2 <- test_data %>% 
- # select(covid_19_deaths) %>% 
-  #mutate(covid_19_deaths = exp(covid_19_deaths))
+# xgb_pred2 <- as.data.frame(xgb_pred) %>%
+#   mutate(xgb_pred = exp(xgb_pred))
+# 
+# test_data2 <- test_data %>%
+#   select(covid_19_deaths) %>%
+#   mutate(covid_19_deaths = exp(covid_19_deaths))
 
 # Check MAE value
 xgboost_mae <- mae(test_data$covid_19_deaths, xgb_pred)

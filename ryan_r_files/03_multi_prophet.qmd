@@ -1,5 +1,5 @@
 ---
-title: "Mulivariate Prophet Model"
+title: "Multivariate Prophet Model"
 subtitle: "Predicting COVID-19 Deaths (STAT 390)" 
 author: "Ryan Nguyen"
 
@@ -41,19 +41,21 @@ set.seed(123)
 
 ## 2. Pull Data
 ```{r}
-selected_deaths <- read_csv("data/finaldata_selectedfeatures.csv")
+selected_death <- read_csv("data/finaldata_selectedfeatures.csv")
 ```
 
 ## 3. Data Processing
 ```{r}
-selected_deaths <- selected_deaths  %>% 
+selected_deaths <- selected_death  %>% 
   rename(ds = date,
-         y = covid_19_deaths)
+         y = covid_19_deaths) %>% 
+  select(-c(starts_with("deaths_"), "dayofweek", "quarter", "month", "dayofyear", "dayofmonth",
+            "weekofyear"))
 
 # LOCF 
 selected_deaths <- fill(selected_deaths, everything())
 
-selected_deaths <- replace(selected_deaths, is.na(selected_deaths), 0)
+selected_deaths <- replace(selected_deaths, is.na(selected_deaths), 100000000)
 
 naniar::miss_var_summary(selected_deaths)
 
@@ -61,8 +63,8 @@ selected_deaths <- selected_deaths %>%
   mutate(y = case_when((y == 0) ~ 1,
                        .default = y))
 
-selected_deaths <- selected_deaths %>% 
-  mutate(y = log(y))
+# selected_deaths <- selected_deaths %>% 
+#   mutate(y = log(y))
   
 ```
 
@@ -73,10 +75,12 @@ selected_deaths <- selected_deaths %>%
 #test_data <- testing(splits)
 
 train_data <- selected_deaths %>% 
-  filter(year != 2023)
+  filter(year != 2023) %>% 
+  select(-c(year))
 
 test_data <- selected_deaths %>% 
-  filter(year == 2023)
+  filter(year == 2023) %>% 
+  select(-c(year))
 ```
 
 ## 5. Baseline Model
@@ -109,21 +113,27 @@ prophet_plot_components(baseline_model, forecast_baseline)
 ### 5.3 Baseline Model Performance
 ```{r}
 # Merge actual and predicted values
-forecast_baseline2 <- forecast_baseline %>%
-  filter(ds > as.POSIXct("2023-01-01"))
+forecast_baseline1 <- predict(baseline_model, selected_deaths)
 
-performance_baseline <- full_join(test_data, forecast_baseline2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+forecast_baseline2 <- forecast_baseline1 %>%
+  filter(ds > as.POSIXct("2023-01-01"))  %>% 
+  mutate(index = seq(1:332))
 
-performance_baseline <- performance_baseline %>% 
-  mutate(y = exp(y),
-         yhat = exp(yhat))
+test_data <- test_data %>%
+  mutate(index = seq(1:332))
+
+performance_baseline <- full_join(test_data, forecast_baseline2, by = join_by(ds == ds, index == index)) %>% 
+  select(ds, y, yhat, index)
+# 
+# performance_baseline <- performance_baseline %>% 
+#   mutate(y = exp(y),
+#          yhat = exp(yhat))
 
 ggplot(performance_baseline) +
   geom_line(aes(x = ds, y = y, color = "red")) +
-  geom_point(aes(x = ds, y = y, color = "red")) +
+  #geom_point(aes(x = index, y = y, color = "red")) +
   geom_line(aes(x = ds, y = yhat, color = "blue")) +
-  geom_point(aes(x = ds, y = yhat, color = "blue")) +
+  #geom_point(aes(x = index, y = yhat, color = "blue")) +
   scale_color_manual(name="Value", values = c("red", "blue"), labels = c("Predicted", "Actual")) +
   labs(title = "Baseline Prophet Test Set", 
        y = "Deaths",
@@ -146,7 +156,7 @@ plot(baseline_model, forecast_baseline) + add_changepoints_to_plot(baseline_mode
 ```
 ```{r}
 # Create prophet model with CI of 95%
-model_changepoint <- prophet(train_data, interval.width = 0.95, n.changepoints = 6)
+model_changepoint <- prophet(train_data, interval.width = 0.95, n.changepoints = 3)
 
 ```
 
@@ -176,18 +186,18 @@ plot(model_changepoint, forecast_changepoint) + add_changepoints_to_plot(model_c
 forecast_changepoint2 <- forecast_changepoint %>%
   filter(ds > as.POSIXct("2023-01-01"))
 
-performance_changepoint <- full_join(test_data, forecast_changepoint2, by = join_by(ds == ds)) %>% 
+performance_changepoint <- full_join(test_data, forecast_changepoint2, by = join_by(ds == ds)) %>%
   select(ds, y, yhat)
 
-performance_changepoint <- performance_changepoint %>% 
-  mutate(y = exp(y),
-         yhat = exp(yhat))
+# performance_changepoint <- performance_changepoint %>% 
+#   mutate(y = exp(y),
+#          yhat = exp(yhat))
 
 ggplot(performance_changepoint) +
   geom_line(aes(x = ds, y = y, color = "red")) +
-  geom_point(aes(x = ds, y = y, color = "red")) +
+  #geom_point(aes(x = ds, y = y, color = "red")) +
   geom_line(aes(x = ds, y = yhat, color = "blue")) +
-  geom_point(aes(x = ds, y = yhat, color = "blue")) +
+  #geom_point(aes(x = ds, y = yhat, color = "blue")) +
   scale_color_manual(name="Value", values = c("red", "blue"), labels = c("Predicted", "Actual")) +
   labs(title = "Changepoint Prophet Test Set", 
        y = "Deaths",
@@ -243,15 +253,15 @@ forecast_season2 <- forecast_season %>%
 performance_season <- full_join(test_data, forecast_season2, by = join_by(ds == ds)) %>% 
   select(ds, y, yhat)
 
-performance_season <- performance_season %>% 
-  mutate(y = exp(y),
-         yhat = exp(yhat))
+# performance_season <- performance_season %>% 
+#   mutate(y = exp(y),
+#          yhat = exp(yhat))
 
 ggplot(performance_season) +
  geom_line(aes(x = ds, y = y, color = "red")) +
-  geom_point(aes(x = ds, y = y, color = "red")) +
+  #geom_point(aes(x = ds, y = y, color = "red")) +
   geom_line(aes(x = ds, y = yhat, color = "blue")) +
-  geom_point(aes(x = ds, y = yhat, color = "blue")) +
+  #geom_point(aes(x = ds, y = yhat, color = "blue")) +
   scale_color_manual(name="Value", values = c("red", "blue"), labels = c("Predicted", "Actual")) +
   labs(title = "Seasonality Prophet Test Set", 
        y = "Deaths",
@@ -322,23 +332,27 @@ forecast_regressor2 <- forecast_regressor %>%
 test_data <- test_data %>% 
   mutate(index = seq(1:332))
 
-performance_regressor <- full_join(test_data, forecast_regressor2, by = join_by(index == index, ds == ds)) %>% 
-  select(ds, y, yhat)
+performance_regressor <- full_join(test_data, forecast_regressor2, by = join_by(index == index, ds == ds)) %>%
+  select(ds, y, yhat, index)
 
 performance_regressor <- performance_regressor %>% 
-  mutate(y = exp(y),
-         yhat = exp(yhat))
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                          .default = yhat))
+
+# performance_regressor <- performance_regressor %>% 
+#   mutate(y = exp(y),
+#          yhat = exp(yhat))
 
 # Plotting Test
 ggplot(performance_regressor) +
-  geom_line(aes(x = ds, y = y, color = "red")) +
-  geom_point(aes(x = ds, y = y, color = "red")) +
-  geom_line(aes(x = ds, y = yhat, color = "blue")) +
-  geom_point(aes(x = ds, y = yhat, color = "blue")) +
-  scale_color_manual(name="Value", values = c("red", "blue"), labels = c("Predicted", "Actual")) +
+  geom_line(aes(x = index, y = y, color = "orange")) +
+  # geom_point(aes(x = index, y = y, color = "red")) +
+  geom_line(aes(x = index, y = yhat, color = "blue")) +
+  #geom_point(aes(x = index, y = yhat, color = "blue")) +
+  scale_color_manual(name="Value", values = c("orange", "blue"), labels = c("Predicted", "Actual")) +
   labs(title = "Regressor Prophet Test Set", 
        y = "Deaths",
-       x = "Dates") 
+       x = "Dates")
 
 # Check MAE value
 regressor_mae <- mae(performance_regressor$y, performance_regressor$yhat)
@@ -364,7 +378,7 @@ events <- tribble(
   "superbowl", as.Date('2020-02-02'), -7, 7,
   "superbowl", as.Date('2021-02-07'), -7, 7,
   "superbowl", as.Date('2022-02-13'), -7, 7,
-  "superbowl", as.Date('2020-02-12'), -7, 7,
+  "superbowl", as.Date('2023-02-12'), -7, 7,
 )
 
 events
@@ -372,7 +386,7 @@ events
 
 ```{r}
 # Add holidays 
-model_holiday <- prophet(train_data, holidays = events, n.changepoints = 6, fit = FALSE)
+model_holiday <- prophet(train_data, holidays = events, n.changepoints = 3, fit = FALSE)
 
 # Add built-in country-specific holidays
 model_holiday <- add_country_holidays(model_holiday, country_name = 'US')
@@ -419,9 +433,9 @@ test_data <- test_data %>%
 performance_holiday <- full_join(test_data, forecast_holiday2, by = join_by(ds == ds, index == index)) %>% 
   select(ds, y, yhat)
 
-performance_holiday <- performance_holiday %>% 
-  mutate(y = exp(y),
-         yhat = exp(yhat))
+# performance_holiday <- performance_holiday %>% 
+#   mutate(y = exp(y),
+#          yhat = exp(yhat))
 
 ggplot(performance_holiday) +
   geom_line(aes(x = ds, y = y, color = "red")) +
@@ -448,12 +462,19 @@ print(paste("The MASE for the holiday model is", holiday_mase))
 
 ## 10 Putting Best Parameters Together
 ```{r}
+# logging values
+train_data <- train_data %>% 
+  mutate(y = log(y))
+
+test_data <- test_data %>% 
+  mutate(y = log(y))
+
 # Adding seasonality, holidays, changepoints
 best_prophet <- prophet(train_data,
                         yearly.seasonality = TRUE,
                         weekly.seasonality = TRUE,
                         holidays = events,
-                        #n.changepoints = 6,
+                        n.changepoints = 3,
                         fit = FALSE)
 
 best_prophet <- add_country_holidays(best_prophet, country_name = 'US')
@@ -478,11 +499,46 @@ future_best <- make_future_dataframe(best_fit, freq = "week", periods = 8)
 future_best <- left_join(future_best, train_data, by = join_by(ds == ds))
 
 # Make prediction
-forecast_best <- predict(best_fit, test_data)
+forecast_best <- predict(best_fit, selected_deaths)
+
+# unlog
+forecast_best1 <- forecast_best %>% 
+  mutate(yhat = exp(yhat))
 
 # Visualize the forecast
-#plot(best_fit, forecast_best) +
- # labs(title = "Best Prophet Model")
+plot(best_fit, forecast_best) +
+ labs(title = "Best Prophet Model")
+
+forecast_best2 <- forecast_best %>% 
+  mutate(yhat = exp(yhat),
+         ds = as.Date(ds)) %>% 
+  select(ds, yhat) %>% 
+  mutate(index = seq(1:7306))
+
+selected_deaths2 <- selected_deaths %>% 
+  select(ds, y)  %>% 
+  mutate(index = seq(1:7306))
+
+best_predictions <- full_join(forecast_best2, selected_deaths2, join_by(ds == ds, index == index))
+
+save(best_predictions, file = "results/best_multi_prophet_pred.rda")
+
+best_predictions2 <- best_predictions %>% 
+  filter(ds >= as.Date("2023-01-01"))
+
+ggplot() +
+  geom_line(data = best_predictions2, aes(x = index, y = y, color = "orange"), alpha = 0.55) +
+  geom_line(data = best_predictions2, aes(x = index, y = yhat, color = "blue"), alpha = 0.85) +
+  scale_color_manual(name="Value", values = c("orange", "blue"), labels = c("Predicted", "Actual")) +
+  scale_x_continuous(breaks = c(7000, 7150, 7300),
+                     labels = c("Jan 2023", "Feb 2023", "March 2023")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) +
+  labs(x = NULL,
+       y = NULL) +
+  theme(aspect.ratio=0.2) 
+
+
 ```
 
 
@@ -498,21 +554,28 @@ test_data <- test_data %>%
   mutate(index = seq(1:332))
 
 performance_best <- full_join(test_data, forecast_best2, by = join_by(index == index, ds == ds)) %>%
-  select(ds, y, yhat)
+  select(ds, y, yhat, index)
 
 performance_best <- performance_best %>% 
   mutate(y = exp(y),
          yhat = exp(yhat))
+```
 
+
+```{r}
 best_test_plot <- ggplot(performance_best) +
-  geom_line(aes(x = ds, y = y, color = "red")) +
-  geom_point(aes(x = ds, y = y, color = "red")) +
-  geom_line(aes(x = ds, y = yhat, color = "blue")) +
-  geom_point(aes(x = ds, y = yhat, color = "blue")) +
-  scale_color_manual(name="Value", values = c("red", "blue"), labels = c("Predicted", "Actual")) +
+  geom_line(aes(x = index, y = y, color = "orange")) +
+  #geom_point(aes(x = index, y = y, color = "red")) +
+  geom_line(aes(x = index, y = yhat, color = "blue")) +
+  #geom_point(aes(x = index, y = yhat, color = "blue")) +
+  scale_color_manual(name="Value", values = c("orange", "blue"), labels = c("Predicted", "Actual")) +
+  scale_x_continuous(breaks = c(75, 185, 300),
+                     labels = c("Jan 2023", "Feb 2023", "March 2023")) +
   labs(title = "Best Prophet Test Set", 
        y = "Deaths",
-       x = "Dates") 
+       x = "Dates") +
+  coord_fixed(ratio = 0.2) +
+  theme(legend.title = element_blank())
 best_test_plot
 
 # Check MAE value
