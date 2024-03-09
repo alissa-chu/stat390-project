@@ -128,16 +128,21 @@ performance_baseline <- full_join(test_data, forecast_baseline2, by = join_by(ds
 # performance_baseline <- performance_baseline %>% 
 #   mutate(y = exp(y),
 #          yhat = exp(yhat))
+```
 
+
+```{r}
 ggplot(performance_baseline) +
-  geom_line(aes(x = ds, y = y, color = "red")) +
-  #geom_point(aes(x = index, y = y, color = "red")) +
-  geom_line(aes(x = ds, y = yhat, color = "blue")) +
-  #geom_point(aes(x = index, y = yhat, color = "blue")) +
-  scale_color_manual(name="Value", values = c("red", "blue"), labels = c("Predicted", "Actual")) +
+  geom_line(aes(x = ds, y = y, color = "orange"), linewidth = 1) +
+  #geom_point(aes(x = index, y = y, color = "orange")) +
+  geom_line(aes(x = ds, y = yhat, color = "dodgerblue"), linewidth = 1) +
+  #geom_point(aes(x = index, y = yhat, color = "dodgerblue")) +
+  scale_color_manual(name="Value", values = c("orange", "dodgerblue"), labels = c("Predicted", "Actual")) +
   labs(title = "Baseline Prophet Test Set", 
        y = "Deaths",
-       x = "Dates")
+       x = "Dates") +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 # Check MAE value
 baseline_mae <- mae(performance_baseline$y, performance_baseline$yhat)
@@ -152,6 +157,10 @@ print(paste("The MASE for the baseline model is", baseline_mase))
 ### 6.1 Plot Default Changepoints
 ```{r}
 plot(baseline_model, forecast_baseline) + add_changepoints_to_plot(baseline_model)
+
+# Zooming in
+plot(baseline_model, forecast_baseline) + add_changepoints_to_plot(baseline_model) +
+  coord_fixed(ylim = c(0, 1000))
 
 ```
 ```{r}
@@ -187,21 +196,25 @@ forecast_changepoint2 <- forecast_changepoint %>%
   filter(ds > as.POSIXct("2023-01-01"))
 
 performance_changepoint <- full_join(test_data, forecast_changepoint2, by = join_by(ds == ds)) %>%
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
 
 # performance_changepoint <- performance_changepoint %>% 
 #   mutate(y = exp(y),
 #          yhat = exp(yhat))
 
 ggplot(performance_changepoint) +
-  geom_line(aes(x = ds, y = y, color = "red")) +
-  #geom_point(aes(x = ds, y = y, color = "red")) +
-  geom_line(aes(x = ds, y = yhat, color = "blue")) +
-  #geom_point(aes(x = ds, y = yhat, color = "blue")) +
-  scale_color_manual(name="Value", values = c("red", "blue"), labels = c("Predicted", "Actual")) +
+  geom_line(aes(x = ds, y = y, color = "orange"), linewidth = 1) +
+  #geom_point(aes(x = ds, y = y, color = "orange")) +
+  geom_line(aes(x = ds, y = yhat, color = "dodgerblue"), linewidth = 1) +
+  #geom_point(aes(x = ds, y = yhat, color = "dodgerblue")) +
+  scale_color_manual(name="Value", values = c("orange", "dodgerblue"), labels = c("Predicted", "Actual")) +
   labs(title = "Changepoint Prophet Test Set", 
        y = "Deaths",
-       x = "Dates") 
+       x = "Dates") +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 # Check MAE value
 changepoint_mae <- mae(performance_changepoint$y, performance_changepoint$yhat)
@@ -219,7 +232,7 @@ print(paste("The MASE for the changepoint model is", changepoint_mase))
 ```{r}
 # Add seasonality and fit to training set
 model_season <- prophet(train_data,
-                        yearly.seasonality = TRUE,
+                        yearly.seasonality = FALSE,
                         weekly.seasonality = TRUE)
 
 ```
@@ -258,14 +271,16 @@ performance_season <- full_join(test_data, forecast_season2, by = join_by(ds == 
 #          yhat = exp(yhat))
 
 ggplot(performance_season) +
- geom_line(aes(x = ds, y = y, color = "red")) +
-  #geom_point(aes(x = ds, y = y, color = "red")) +
-  geom_line(aes(x = ds, y = yhat, color = "blue")) +
-  #geom_point(aes(x = ds, y = yhat, color = "blue")) +
-  scale_color_manual(name="Value", values = c("red", "blue"), labels = c("Predicted", "Actual")) +
+ geom_line(aes(x = ds, y = y, color = "orange"), linewidth = 1) +
+  #geom_point(aes(x = ds, y = y, color = "orange")) +
+  geom_line(aes(x = ds, y = yhat, color = "dodgerblue"), linewidth = 1) +
+  #geom_point(aes(x = ds, y = yhat, color = "dodgerblue")) +
+  scale_color_manual(name="Value", values = c("orange", "dodgerblue"), labels = c("Predicted", "Actual")) +
   labs(title = "Seasonality Prophet Test Set", 
        y = "Deaths",
-       x = "Dates") 
+       x = "Dates") +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 # Check MAE value
 season_mae <- mae(performance_season$y, performance_season$yhat)
@@ -346,13 +361,16 @@ performance_regressor <- performance_regressor %>%
 # Plotting Test
 ggplot(performance_regressor) +
   geom_line(aes(x = index, y = y, color = "orange")) +
-  # geom_point(aes(x = index, y = y, color = "red")) +
-  geom_line(aes(x = index, y = yhat, color = "blue")) +
-  #geom_point(aes(x = index, y = yhat, color = "blue")) +
-  scale_color_manual(name="Value", values = c("orange", "blue"), labels = c("Predicted", "Actual")) +
+  # geom_point(aes(x = index, y = y, color = "orange")) +
+  geom_line(aes(x = index, y = yhat, color = "dodgerblue")) +
+  #geom_point(aes(x = index, y = yhat, color = "dodgerblue")) +
+  scale_color_manual(name="Value", values = c("orange", "dodgerblue"), labels = c("Predicted", "Actual")) +
   labs(title = "Regressor Prophet Test Set", 
        y = "Deaths",
-       x = "Dates")
+       x = "Index") +
+  theme_bw() +
+  theme(legend.title = element_blank()) +
+  coord_fixed(ratio = 0.2)
 
 # Check MAE value
 regressor_mae <- mae(performance_regressor$y, performance_regressor$yhat)
@@ -386,7 +404,7 @@ events
 
 ```{r}
 # Add holidays 
-model_holiday <- prophet(train_data, holidays = events, n.changepoints = 3, fit = FALSE)
+model_holiday <- prophet(train_data, holidays = events, fit = FALSE)
 
 # Add built-in country-specific holidays
 model_holiday <- add_country_holidays(model_holiday, country_name = 'US')
@@ -436,16 +454,21 @@ performance_holiday <- full_join(test_data, forecast_holiday2, by = join_by(ds =
 # performance_holiday <- performance_holiday %>% 
 #   mutate(y = exp(y),
 #          yhat = exp(yhat))
+```
 
+
+```{r}
 ggplot(performance_holiday) +
-  geom_line(aes(x = ds, y = y, color = "red")) +
-  geom_point(aes(x = ds, y = y, color = "red")) +
-  geom_line(aes(x = ds, y = yhat, color = "blue")) +
-  geom_point(aes(x = ds, y = yhat, color = "blue")) +
-  scale_color_manual(name="Value", values = c("red", "blue"), labels = c("Predicted", "Actual")) +
+  geom_line(aes(x = ds, y = y, color = "orange"), linewidth = 1) +
+  #eom_point(aes(x = ds, y = y, color = "orange")) +
+  geom_line(aes(x = ds, y = yhat, color = "dodgerblue"), linewidth = 1) +
+  #geom_point(aes(x = ds, y = yhat, color = "dodgerblue")) +
+  scale_color_manual(name="Value", values = c("orange", "dodgerblue"), labels = c("Predicted", "Actual")) +
   labs(title = "Holiday Prophet Test Set", 
        y = "Deaths",
-       x = "Dates") 
+       x = "Dates") +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 # Check MAE value
 holiday_mae <- mae(performance_holiday$y, performance_holiday$yhat)
@@ -464,6 +487,8 @@ print(paste("The MASE for the holiday model is", holiday_mase))
 ```{r}
 # logging values
 train_data <- train_data %>% 
+  mutate(y = case_when((y == 0) ~ 1,
+                       .default = y)) %>% 
   mutate(y = log(y))
 
 test_data <- test_data %>% 
@@ -500,7 +525,10 @@ future_best <- left_join(future_best, train_data, by = join_by(ds == ds))
 
 # Make prediction
 forecast_best <- predict(best_fit, selected_deaths)
+```
 
+
+```{r}
 # unlog
 forecast_best1 <- forecast_best %>% 
   mutate(yhat = exp(yhat))
@@ -521,15 +549,15 @@ selected_deaths2 <- selected_deaths %>%
 
 best_predictions <- full_join(forecast_best2, selected_deaths2, join_by(ds == ds, index == index))
 
-save(best_predictions, file = "results/best_multi_prophet_pred.rda")
+# save(best_predictions, file = "results/best_multi_prophet_pred.rda")
 
 best_predictions2 <- best_predictions %>% 
   filter(ds >= as.Date("2023-01-01"))
 
 ggplot() +
   geom_line(data = best_predictions2, aes(x = index, y = y, color = "orange"), alpha = 0.55) +
-  geom_line(data = best_predictions2, aes(x = index, y = yhat, color = "blue"), alpha = 0.85) +
-  scale_color_manual(name="Value", values = c("orange", "blue"), labels = c("Predicted", "Actual")) +
+  geom_line(data = best_predictions2, aes(x = index, y = yhat, color = "dodgerblue"), alpha = 0.85) +
+  scale_color_manual(name="Value", values = c("orange", "dodgerblue"), labels = c("Predicted", "Actual")) +
   scale_x_continuous(breaks = c(7000, 7150, 7300),
                      labels = c("Jan 2023", "Feb 2023", "March 2023")) +
   theme_bw() +
@@ -565,17 +593,18 @@ performance_best <- performance_best %>%
 ```{r}
 best_test_plot <- ggplot(performance_best) +
   geom_line(aes(x = index, y = y, color = "orange")) +
-  #geom_point(aes(x = index, y = y, color = "red")) +
-  geom_line(aes(x = index, y = yhat, color = "blue")) +
-  #geom_point(aes(x = index, y = yhat, color = "blue")) +
-  scale_color_manual(name="Value", values = c("orange", "blue"), labels = c("Predicted", "Actual")) +
+  #geom_point(aes(x = index, y = y, color = "orange")) +
+  geom_line(aes(x = index, y = yhat, color = "dodgerblue")) +
+  #geom_point(aes(x = index, y = yhat, color = "dodgerblue")) +
+  scale_color_manual(name="Value", values = c("orange", "dodgerblue"), labels = c("Predicted", "Actual")) +
   scale_x_continuous(breaks = c(75, 185, 300),
                      labels = c("Jan 2023", "Feb 2023", "March 2023")) +
   labs(title = "Best Prophet Test Set", 
        y = "Deaths",
        x = "Dates") +
   coord_fixed(ratio = 0.2) +
-  theme(legend.title = element_blank())
+  theme(legend.title = element_blank()) +
+  theme_bw()
 best_test_plot
 
 # Check MAE value

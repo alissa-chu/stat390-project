@@ -40,7 +40,11 @@ load("results/univariate_prophet.rda")
 #| label: East Plots
 east_initial_arima_plot +
   east_tuned_arima_plot +
-  east_initial_sarima_plot + east_tuned_sarima_plot + east_auto_plot + east_best_prophet_plot + plot_layout(ncol = 2)
+  east_initial_sarima_plot + 
+  east_tuned_sarima_plot + 
+  east_auto_plot + 
+  east_best_proph_test + 
+  plot_layout(ncol = 2)
 ```
 
 ### Midwest Region
@@ -51,7 +55,7 @@ midwest_initial_arima_plot +
   midwest_initial_sarima_plot + 
   midwest_tuned_sarima_plot + 
   midwest_auto_plot + 
-  midwest_best_prophet_plot +
+  midwest_best_proph_test +
   plot_layout(ncol = 2)
 ```
 
@@ -63,7 +67,7 @@ south_initial_arima_plot +
   south_initial_sarima_plot + 
   south_tuned_sarima_plot + 
   south_auto_plot + 
-  south_season_prophet_plot +
+  south_best_proph_test +
   plot_layout(ncol = 2)
 ```
 
@@ -75,59 +79,76 @@ west_initial_arima_plot +
   west_initial_sarima_plot +
   west_tuned_sarima_plot + 
   west_auto_plot + 
-  west_best_prophet_plot +
+  west_best_proph_test +
   plot_layout(ncol = 2)
 ```
 
 
 ## Model Accuracy
+
+### East Region
 ```{r}
-as_tibble(rbind(east_initial_arima_acc,
-                east_tuned_arima_acc,
-                east_initial_sarima_acc,
-                east_tuned_sarima_acc,
-                east_auto_acc)) %>% 
-  add_row(tibble_row(MAE = east_best_prophet_mae, MASE = east_best_prophet_mase)) %>% 
-  add_column(model = c("Initial ARIMA", "Tuned ARIMA", "Initial SARIMA", "Tuned SARIMA", "Auto ARIMA", "Prophet")) %>% 
-  select(model, MAE, MASE) %>% 
-  kbl(caption = "<center>East Region<center>") %>% 
+tribble(
+  ~model, ~mae, ~mase,
+  #--|--|----
+  "initial arima", east_initial_arima_mae, east_initial_arima_mase,
+  "tuned arima", east_tuned_arima_mae, east_tuned_arima_mase,
+  "initial sarima", east_initial_sarima_mae, east_initial_sarima_mase,
+  "tuned sarima", east_tuned_sarima_mae, east_tuned_sarima_mase,
+  "auto arima", east_auto_mae, east_auto_mase,
+  "prophet", east_season_prophet_mae, east_season_prophet_mase
+) %>% 
+  kbl() %>% 
+  kable_styling()
+```
+
+### Midwest Region
+```{r}
+tribble(
+  ~model, ~mae, ~mase,
+  #--|--|----
+  "initial arima", midwest_initial_arima_mae, midwest_initial_arima_mase,
+  "tuned arima", midwest_tuned_arima_mae, midwest_tuned_arima_mase,
+  "initial sarima", midwest_initial_sarima_mae, midwest_initial_sarima_mase,
+  "tuned sarima", midwest_tuned_sarima_mae, midwest_tuned_sarima_mase,
+  "auto arima", midwest_auto_mae, midwest_auto_mase,
+  "prophet", midwest_best_prophet_mae, midwest_best_prophet_mase
+) %>% 
+  kbl() %>% 
+  kable_styling()
+```
+
+### South Region
+```{r}
+tribble(
+  ~model, ~mae, ~mase,
+  #--|--|----
+  "initial arima", south_initial_arima_mae, south_initial_arima_mase,
+  "tuned arima", south_tuned_arima_mae, south_tuned_arima_mase,
+  "initial sarima", south_initial_sarima_mae, south_initial_sarima_mase,
+  "tuned sarima", south_tuned_sarima_mae, south_tuned_sarima_mase,
+  "auto arima", south_auto_mae, south_auto_mase,
+  "prophet", south_best_prophet_mae, south_best_prophet_mase
+) %>% 
+  kbl() %>% 
+  kable_styling()
+```
+
+### West Region
+```{r}
+tribble(
+  ~model, ~mae, ~mase,
+  #--|--|----
+  "initial arima", west_initial_arima_mae, west_initial_arima_mase,
+  "tuned arima", west_tuned_arima_mae, west_tuned_arima_mase,
+  "initial sarima", west_initial_sarima_mae, west_initial_sarima_mase,
+  "tuned sarima", west_tuned_sarima_mae, west_tuned_sarima_mase,
+  "auto arima", west_auto_mae, west_auto_mase,
+  "prophet", west_best_prophet_mae, west_best_prophet_mase
+) %>% 
+  kbl() %>% 
   kable_styling()
 
-
-as_tibble(rbind(midwest_initial_arima_acc,
-                midwest_tuned_arima_acc,
-                midwest_initial_sarima_acc,
-                midwest_tuned_sarima_acc,
-                midwest_auto_acc)) %>% 
-  add_row(tibble_row(MAE = midwest_best_prophet_mae, MASE = midwest_best_prophet_mase)) %>% 
-  add_column(model = c("Initial ARIMA", "Tuned ARIMA", "Initial SARIMA", "Tuned SARIMA", "Auto ARIMA", "Prophet")) %>% 
-  select(model, MAE, MASE) %>% 
-  kbl(caption = "<center>Midwest Region<center>") %>% 
-  kable_styling()
-
-
-as_tibble(rbind(south_initial_arima_acc,
-                south_tuned_arima_acc,
-                south_initial_sarima_acc,
-                south_tuned_sarima_acc,
-                south_auto_acc)) %>% 
-  add_row(tibble_row(MAE = south_season_prophet_mae, MASE = south_season_prophet_mase)) %>% 
-  add_column(model = c("Initial ARIMA", "Tuned ARIMA", "Initial SARIMA", "Tuned SARIMA", "Auto ARIMA", "Prophet")) %>% 
-  select(model, MAE, MASE) %>% 
-  kbl(caption = "<center>South Region<center>") %>% 
-  kable_styling()
-
-
-as_tibble(rbind(west_initial_arima_acc,
-                west_tuned_arima_acc,
-                west_initial_sarima_acc,
-                west_tuned_sarima_acc,
-                west_auto_acc)) %>% 
-  add_row(tibble_row(MAE = west_best_prophet_mae, MASE = west_best_prophet_mase)) %>% 
-  add_column(model = c("Initial ARIMA", "Tuned ARIMA", "Initial SARIMA", "Tuned SARIMA", "Auto ARIMA", "Prophet")) %>% 
-  select(model, MAE, MASE) %>% 
-  kbl(caption = "<center>West Region<center>") %>% 
-  kable_styling()
 
 ```
 
