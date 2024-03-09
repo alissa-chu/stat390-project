@@ -39,13 +39,13 @@ set.seed(123)
 # Loading Data  ----------------------------------------------------------------
 
 ## Converting it into Prophet format
-total <- read_csv("data/new_daily_deaths.csv") %>% 
-  rename(ds = date,
-         y = daily_deaths) %>% 
-  select(-c(region)) %>% 
-  group_by(ds) %>% 
-  mutate(y = sum(y)) %>% 
-  distinct(ds, y)
+# total <- read_csv("data/new_daily_deaths.csv") %>% 
+#   rename(ds = date,
+#          y = daily_deaths) %>% 
+#   select(-c(region)) %>% 
+#   group_by(ds) %>% 
+#   mutate(y = sum(y)) %>% 
+#   distinct(ds, y)
 
 east <- read_csv("data/east_daily.csv") %>% 
   rename(ds = date,
@@ -68,9 +68,9 @@ west <- read_csv("data/west_daily.csv") %>%
 ## 2. Data Splitting
 ```{r}
 # Data Splitting ---------------------------------------------------------------
-total_splits <- time_series_split(total, initial = "908 days", assess = "228 days")
-total_train <- training(total_splits)
-total_test <- testing(total_splits)
+# total_splits <- time_series_split(total, initial = "908 days", assess = "228 days")
+# total_train <- training(total_splits)
+# total_test <- testing(total_splits)
 
 east_splits <- time_series_split(east, initial = "1022 days", assess = "114 days")
 east_train <- training(east_splits)
@@ -96,11 +96,11 @@ west_test <- testing(west_splits)
 
 ## Total -----------------------------------------------------------------------
 ### Initialize & Fit the Prophet ----
-total_baseline_prophet <- prophet(total_train)
-
-### Forecast Future Predictions ----
-total_baseline_future <- make_future_dataframe(total_baseline_prophet, periods = nrow(total_test), freq = "day")
-total_baseline_forecast <- predict(total_baseline_prophet, total_baseline_future)
+# total_baseline_prophet <- prophet(total_train)
+# 
+# ### Forecast Future Predictions ----
+# total_baseline_future <- make_future_dataframe(total_baseline_prophet, periods = nrow(total_test), freq = "day")
+# total_baseline_forecast <- predict(total_baseline_prophet, total_baseline_future)
 
 
 ## East Region -----------------------------------------------------------------
@@ -141,14 +141,14 @@ west_baseline_forecast <- predict(west_baseline_prophet, west_baseline_future)
 ### 3.1 Plotting Forecasts
 
 ```{r}
-plot(total_baseline_prophet, total_baseline_forecast) +
-  geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
-  theme_minimal() +
-  labs(title = "Total Baseline Univariate Prophet",
-       x = "Date",
-       y = "Daily Deaths")
-
-prophet_plot_components(total_baseline_prophet, total_baseline_forecast) 
+# plot(total_baseline_prophet, total_baseline_forecast) +
+#   geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
+#   theme_minimal() +
+#   labs(title = "Total Baseline Univariate Prophet",
+#        x = "Date",
+#        y = "Daily Deaths")
+# 
+# prophet_plot_components(total_baseline_prophet, total_baseline_forecast) 
 
 east_baseline_prophet_plot <- plot(east_baseline_prophet, east_baseline_forecast) +
   theme_minimal() +
@@ -196,19 +196,19 @@ prophet_plot_components(west_baseline_prophet, west_baseline_forecast)
 ### 3.2. Baseline Accuracy
 ```{r}
 ## Total Prophet ----------------------------------------------------------------
-total_forecast2 <- total_baseline_forecast %>% 
-  filter(ds >=  as.POSIXct("2022-08-07"))
-
-performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
-
-# Check MAE value
-total_baseline_mae <- mae(performance_total$y, performance_total$yhat)
-print(paste("The MAE for the total model is", total_baseline_mae))
-
-# Check MASE value
-total_baseline_mase <- mase(performance_total$y, performance_total$yhat)
-print(paste("The MASE for the total model is", total_baseline_mase))
+# total_forecast2 <- total_baseline_forecast %>% 
+#   filter(ds >=  as.POSIXct("2022-08-07"))
+# 
+# performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
+#   select(ds, y, yhat)
+# 
+# # Check MAE value
+# total_baseline_mae <- mae(performance_total$y, performance_total$yhat)
+# print(paste("The MAE for the total model is", total_baseline_mae))
+# 
+# # Check MASE value
+# total_baseline_mase <- mase(performance_total$y, performance_total$yhat)
+# print(paste("The MASE for the total model is", total_baseline_mase))
 ```
 
 #### East
@@ -218,7 +218,18 @@ east_forecast2 <- east_baseline_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_east %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
+
 
 # Check MAE value
 east_baseline_prophet_mae <- mae(performance_east$y, performance_east$yhat)
@@ -237,7 +248,17 @@ midwest_forecast2 <- midwest_baseline_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_midwest %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 # Check MAE value
 midwest_baseline_prophet_mae<- mae(performance_midwest$y, performance_midwest$yhat)
@@ -255,7 +276,17 @@ south_forecast2 <- south_baseline_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_south %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 # Check MAE value
 south_baseline_prophet_mae<- mae(performance_south$y, performance_south$yhat)
@@ -273,7 +304,17 @@ west_forecast2 <- west_baseline_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_west %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 # Check MAE value
 west_baseline_prophet_mae<- mae(performance_west$y, performance_west$yhat)
@@ -311,7 +352,7 @@ save(
 #### Total 
 ```{r}
 # Total
-plot(total_baseline_prophet, total_baseline_forecast) + add_changepoints_to_plot(total_baseline_prophet)
+# plot(total_baseline_prophet, total_baseline_forecast) + add_changepoints_to_plot(total_baseline_prophet)
 ```
 
 #### East
@@ -341,15 +382,15 @@ plot(west_baseline_prophet, west_baseline_forecast) + add_changepoints_to_plot(w
 
 ```{r}
 # Create prophet model with CI of 95%
-total_changepoint <- prophet(total_train, interval.width = 0.95, n.changepoints = 2)
+# total_changepoint <- prophet(total_train, interval.width = 0.95, n.changepoints = 2)
 
-east_changepoint <- prophet(east_train, interval.width = 0.95, n.changepoints = 4)
+east_changepoint <- prophet(east_train, interval.width = 0.95, n.changepoints = 9)
 
-midwest_changepoint <- prophet(midwest_train, interval.width = 0.95, n.changepoints = 3)
+midwest_changepoint <- prophet(midwest_train, interval.width = 0.95, n.changepoints = 1)
 
-south_changepoint <- prophet(south_train, interval.width = 0.95, n.changepoints = 3)
+south_changepoint <- prophet(south_train, interval.width = 0.95, n.changepoints = 5)
 
-west_changepoint <- prophet(west_train, interval.width = 0.95, n.changepoints = 4)
+west_changepoint <- prophet(west_train, interval.width = 0.95, n.changepoints = 2)
 
 
 ```
@@ -360,14 +401,14 @@ west_changepoint <- prophet(west_train, interval.width = 0.95, n.changepoints = 
 #### Total
 ```{r}
 # Create time range for forecast
-total_changepoint_future <- make_future_dataframe(total_changepoint, freq = "day", periods = nrow(total_test))
-
-# Make prediction
-total_changepoint_forecast <- predict(total_changepoint, total_changepoint_future )
-
-# Visualize the forecast
-plot(total_changepoint, total_changepoint_forecast ) +
-  labs(title = "Total Changepoint Prophet Model")
+# total_changepoint_future <- make_future_dataframe(total_changepoint, freq = "day", periods = nrow(total_test))
+# 
+# # Make prediction
+# total_changepoint_forecast <- predict(total_changepoint, total_changepoint_future )
+# 
+# # Visualize the forecast
+# plot(total_changepoint, total_changepoint_forecast ) +
+#   labs(title = "Total Changepoint Prophet Model")
 ```
 
 #### East
@@ -428,19 +469,19 @@ plot(west_changepoint, west_changepoint_forecast ) +
 ### 4.3 Changepoint Accuracy
 ```{r}
 ## Total Prophet ----------------------------------------------------------------
-total_forecast2 <- total_changepoint_forecast %>% 
-  filter(ds >=  as.POSIXct("2022-08-07"))
-
-performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
-
-# Check MAE value
-total_changepoint_mae <- mae(performance_total$y, performance_total$yhat)
-print(paste("The MAE for the total changepoint model is", total_changepoint_mae))
-
-# Check MASE value
-total_changepoint_mase <- mase(performance_total$y, performance_total$yhat)
-print(paste("The MASE for the total changepoint model is", total_changepoint_mase))
+# total_forecast2 <- total_changepoint_forecast %>% 
+#   filter(ds >=  as.POSIXct("2022-08-07"))
+# 
+# performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
+#   select(ds, y, yhat)
+# 
+# # Check MAE value
+# total_changepoint_mae <- mae(performance_total$y, performance_total$yhat)
+# print(paste("The MAE for the total changepoint model is", total_changepoint_mae))
+# 
+# # Check MASE value
+# total_changepoint_mase <- mase(performance_total$y, performance_total$yhat)
+# print(paste("The MASE for the total changepoint model is", total_changepoint_mase))
 ```
 
 ```{r}
@@ -449,7 +490,17 @@ east_forecast2 <- east_changepoint_forecast %>%
   filter(ds > as.POSIXct("2022-11-29"))
 
 performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_east %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 # Check MAE value
 east_changepoint_mae <- mae(performance_east$y, performance_east$yhat)
@@ -466,7 +517,17 @@ midwest_forecast2 <- midwest_changepoint_forecast %>%
   filter(ds > as.POSIXct("2022-11-29"))
 
 performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_midwest %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 # Check MAE value
 midwest_changepoint_mae <- mae(performance_midwest$y, performance_midwest$yhat)
@@ -483,7 +544,17 @@ south_forecast2 <- south_changepoint_forecast %>%
   filter(ds > as.POSIXct("2022-11-29"))
 
 performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_south %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 # Check MAE value
 south_changepoint_mae <- mae(performance_south$y, performance_south$yhat)
@@ -496,11 +567,27 @@ print(paste("The MASE for the south changepoint model is", south_changepoint_mas
 
 ```{r}
 ## west Prophet ----------------------------------------------------------------
+west_changepoint <- prophet(west_train, interval.width = 0.95, n.changepoints = 1)
+west_changepoint_future <- make_future_dataframe(west_changepoint, freq = "day", periods = nrow(west_test))
+
+# Make prediction
+west_changepoint_forecast <- predict(west_changepoint, west_changepoint_future )
+
 west_forecast2 <- west_changepoint_forecast %>% 
   filter(ds > as.POSIXct("2022-11-29"))
 
 performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_west %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 # Check MAE value
 west_changepoint_mae <- mae(performance_west$y, performance_west$yhat)
@@ -518,17 +605,17 @@ print(paste("The MASE for the west changepoint model is", west_changepoint_mase)
 
 ```{r}
 ## Total -----------------------------------------------------------------------
-### Initialize & Fit the Prophet ----
-total_season_prophet <- prophet(total_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
-
-### Forecast Future Predictions ----
-total_season_future <- make_future_dataframe(total_season_prophet, periods = nrow(total_test), freq = "day")
-total_season_forecast <- predict(total_season_prophet, total_season_future)
+# ### Initialize & Fit the Prophet ----
+# total_season_prophet <- prophet(total_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+# 
+# ### Forecast Future Predictions ----
+# total_season_future <- make_future_dataframe(total_season_prophet, periods = nrow(total_test), freq = "day")
+# total_season_forecast <- predict(total_season_prophet, total_season_future)
 
 
 ## East Region -----------------------------------------------------------------
 ### Initialize & Fit the Prophet ----
-east_season_prophet <- prophet(east_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+east_season_prophet <- prophet(east_train, yearly.seasonality = FALSE, weekly.seasonality = TRUE)
 
 ### Forecast Future Predictions ----
 east_season_future <- make_future_dataframe(east_season_prophet, periods = nrow(east_test), freq = "day")
@@ -536,7 +623,7 @@ east_season_forecast <- predict(east_season_prophet, east_season_future)
 
 
 ### Initialize & Fit the Prophet ----
-midwest_season_prophet <- prophet(midwest_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+midwest_season_prophet <- prophet(midwest_train, yearly.seasonality = FALSE, weekly.seasonality = TRUE)
 
 ### Forecast Future Predictions ----
 midwest_season_future <- make_future_dataframe(midwest_season_prophet, periods = nrow(midwest_test), freq = "day")
@@ -545,7 +632,7 @@ midwest_season_forecast <- predict(midwest_season_prophet, midwest_season_future
 
 ## South Region -----------------------------------------------------------------
 ### Initialize & Fit the Prophet ----
-south_season_prophet <- prophet(south_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+south_season_prophet <- prophet(south_train, yearly.seasonality = FALSE, weekly.seasonality = TRUE)
 
 ### Forecast Future Predictions ----
 south_season_future <- make_future_dataframe(south_season_prophet, periods = nrow(south_test), freq = "day")
@@ -554,7 +641,7 @@ south_season_forecast <- predict(south_season_prophet, south_season_future)
 
 ## West Region -----------------------------------------------------------------
 ### Initialize & Fit the Prophet ----
-west_season_prophet <- prophet(west_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+west_season_prophet <- prophet(west_train, yearly.seasonality = FALSE, weekly.seasonality = TRUE)
 
 ### Forecast Future Predictions ----
 west_season_future <- make_future_dataframe(west_season_prophet, periods = nrow(west_test), freq = "day")
@@ -566,14 +653,14 @@ west_season_forecast <- predict(west_season_prophet, west_season_future)
 ### 5.2 Plotting Forecasts
 
 ```{r}
-plot(total_season_prophet, total_season_forecast) +
-  geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
-  theme_minimal() +
-  labs(title = "Total Season Univariate Prophet",
-       x = "Date",
-       y = "Daily Deaths")
-
-prophet_plot_components(total_season_prophet, total_season_forecast) 
+# plot(total_season_prophet, total_season_forecast) +
+#   geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
+#   theme_minimal() +
+#   labs(title = "Total Season Univariate Prophet",
+#        x = "Date",
+#        y = "Daily Deaths")
+# 
+# prophet_plot_components(total_season_prophet, total_season_forecast) 
 
 east_season_prophet_plot <- plot(east_season_prophet, east_season_forecast) +
   theme_minimal() +
@@ -621,19 +708,19 @@ prophet_plot_components(west_season_prophet, west_season_forecast)
 ### 5.3 Season Accuracy
 ```{r}
 ## Total Prophet ----------------------------------------------------------------
-total_forecast2 <- total_season_forecast %>% 
-  filter(ds >=  as.POSIXct("2022-08-07"))
-
-performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
-
-# Check MAE value
-total_season_mae <- mae(performance_total$y, performance_total$yhat)
-print(paste("The MAE for the total model is", total_season_mae))
-
-# Check MASE value
-total_season_mase <- mase(performance_total$y, performance_total$yhat)
-print(paste("The MASE for the total model is", total_season_mase))
+# total_forecast2 <- total_season_forecast %>% 
+#   filter(ds >=  as.POSIXct("2022-08-07"))
+# 
+# performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
+#   select(ds, y, yhat)
+# 
+# # Check MAE value
+# total_season_mae <- mae(performance_total$y, performance_total$yhat)
+# print(paste("The MAE for the total model is", total_season_mae))
+# 
+# # Check MASE value
+# total_season_mase <- mase(performance_total$y, performance_total$yhat)
+# print(paste("The MASE for the total model is", total_season_mase))
 ```
 
 #### East
@@ -643,7 +730,19 @@ east_forecast2 <- east_season_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+season_east_plot <- performance_east %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
+
+season_east_plot 
 
 # Check MAE value
 east_season_prophet_mae <- mae(performance_east$y, performance_east$yhat)
@@ -662,7 +761,17 @@ midwest_forecast2 <- midwest_season_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_midwest %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 # Check MAE value
 midwest_season_prophet_mae<- mae(performance_midwest$y, performance_midwest$yhat)
@@ -680,7 +789,17 @@ south_forecast2 <- south_season_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_south %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 # Check MAE value
 south_season_prophet_mae<- mae(performance_south$y, performance_south$yhat)
@@ -698,7 +817,17 @@ west_forecast2 <- west_season_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_west %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
 
 # Check MAE value
 west_season_prophet_mae<- mae(performance_west$y, performance_west$yhat)
@@ -725,13 +854,13 @@ events
 ```
 ### 6.1 Build Holiday Model
 ```{r}
-total_holiday <- prophet(total_train, holidays = events, fit = FALSE)
-
-# Add built-in country-specific holidays
-total_holiday <- add_country_holidays(total_holiday, country_name = 'US')
-
-# Fit model on training
-total_holiday_prophet <- fit.prophet(total_holiday, total_train)
+# total_holiday <- prophet(total_train, holidays = events, fit = FALSE)
+# 
+# # Add built-in country-specific holidays
+# total_holiday <- add_country_holidays(total_holiday, country_name = 'US')
+# 
+# # Fit model on training
+# total_holiday_prophet <- fit.prophet(total_holiday, total_train)
 ```
 
 ```{r}
@@ -779,8 +908,8 @@ west_holiday_prophet <- fit.prophet(west_holiday, west_train)
 ### 6.2 Holiday Model Forecast
 ```{r}
 ### Forecast Future Predictions ----
-total_holiday_future <- make_future_dataframe(total_holiday_prophet, periods = nrow(total_test), freq = "day")
-total_holiday_forecast <- predict(total_holiday_prophet, total_holiday_future)
+# total_holiday_future <- make_future_dataframe(total_holiday_prophet, periods = nrow(total_test), freq = "day")
+# total_holiday_forecast <- predict(total_holiday_prophet, total_holiday_future)
 
 ### East ----
 east_holiday_future <- make_future_dataframe(east_holiday_prophet, periods = nrow(east_test), freq = "day")
@@ -804,14 +933,14 @@ west_holiday_forecast <- predict(west_holiday_prophet, west_holiday_future)
 ### 6.3 Plotting Forecasts
 
 ```{r}
-plot(total_holiday_prophet, total_holiday_forecast) +
-  geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
-  theme_minimal() +
-  labs(title = "Total holiday Univariate Prophet",
-       x = "Date",
-       y = "Daily Deaths")
-
-prophet_plot_components(total_holiday_prophet, total_holiday_forecast) 
+# plot(total_holiday_prophet, total_holiday_forecast) +
+#   geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
+#   theme_minimal() +
+#   labs(title = "Total holiday Univariate Prophet",
+#        x = "Date",
+#        y = "Daily Deaths")
+# 
+# prophet_plot_components(total_holiday_prophet, total_holiday_forecast) 
 
 east_holiday_prophet_plot <- plot(east_holiday_prophet, east_holiday_forecast) +
   theme_minimal() +
@@ -859,20 +988,20 @@ prophet_plot_components(west_holiday_prophet, west_holiday_forecast)
 
 ### 6.4 Holiday Accuracy
 ```{r}
-## Total Prophet ----------------------------------------------------------------
-total_forecast2 <- total_holiday_forecast %>% 
-  filter(ds >=  as.POSIXct("2022-08-07"))
-
-performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
-
-# Check MAE value
-total_holiday_mae <- mae(performance_total$y, performance_total$yhat)
-print(paste("The MAE for the total model is", total_holiday_mae))
-
-# Check MASE value
-total_holiday_mase <- mase(performance_total$y, performance_total$yhat)
-print(paste("The MASE for the total model is", total_holiday_mase))
+# ## Total Prophet ----------------------------------------------------------------
+# total_forecast2 <- total_holiday_forecast %>% 
+#   filter(ds >=  as.POSIXct("2022-08-07"))
+# 
+# performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
+#   select(ds, y, yhat)
+# 
+# # Check MAE value
+# total_holiday_mae <- mae(performance_total$y, performance_total$yhat)
+# print(paste("The MAE for the total model is", total_holiday_mae))
+# 
+# # Check MASE value
+# total_holiday_mase <- mase(performance_total$y, performance_total$yhat)
+# print(paste("The MASE for the total model is", total_holiday_mase))
 ```
 
 #### East
@@ -882,7 +1011,17 @@ east_forecast2 <- east_holiday_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_east %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 # Check MAE value
 east_holiday_prophet_mae <- mae(performance_east$y, performance_east$yhat)
@@ -901,7 +1040,17 @@ midwest_forecast2 <- midwest_holiday_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_midwest %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 # Check MAE value
 midwest_holiday_prophet_mae<- mae(performance_midwest$y, performance_midwest$yhat)
@@ -919,7 +1068,17 @@ south_forecast2 <- south_holiday_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_south %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 # Check MAE value
 south_holiday_prophet_mae<- mae(performance_south$y, performance_south$yhat)
@@ -937,7 +1096,17 @@ west_forecast2 <- west_holiday_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+performance_west %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank())
 
 # Check MAE value
 west_holiday_prophet_mae<- mae(performance_west$y, performance_west$yhat)
@@ -953,47 +1122,52 @@ print(paste("The MASE for the West model is", west_holiday_prophet_mase))
 
 ### 7.1 Build Best Models 
 ```{r}
-# Total
-# changepoint, holiday, season
-total_best <- prophet(total_train, holidays = events, n.changepoints = 2, yearly.seasonality = FALSE, weekly.seasonality = FALSE, fit = FALSE)
-
-# Add built-in country-specific holidays
-total_best <- add_country_holidays(total_best, country_name = 'US')
-
-# Fit model on training
-total_best_prophet <- fit.prophet(total_best, total_train)
+# # Total
+# # changepoint, holiday, season
+# total_best <- prophet(total_train, holidays = events, n.changepoints = 2, yearly.seasonality = FALSE, weekly.seasonality = FALSE, fit = FALSE)
+# 
+# # Add built-in country-specific holidays
+# total_best <- add_country_holidays(total_best, country_name = 'US')
+# 
+# # Fit model on training
+# total_best_prophet <- fit.prophet(total_best, total_train)
 
 # East
 # seasonality
-east_best_prophet <- prophet(east_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE)
+east_best_prophet <- prophet(east_train, n.changepoints = 9, yearly.seasonality = FALSE, weekly.seasonality = TRUE)
 
 # Midwest
-# holiday and seasonality
-midwest_best <- prophet(midwest_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE, holidays = events, fit = FALSE)
+# holiday changepoints and seasonality
+midwest_best <- prophet(midwest_train, yearly.seasonality = FALSE, weekly.seasonality = TRUE, holidays = events, n.changepoints = 1, fit = FALSE)
 midwest_best <- add_country_holidays(midwest_best, country_name = 'US')
 midwest_best_prophet <- fit.prophet(midwest_best, midwest_train)
 
 # South
 # holiday and seasonality
-south_best <- prophet(south_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE, holidays = events, fit = FALSE)
+south_best <- prophet(south_train, yearly.seasonality = FALSE, weekly.seasonality = TRUE, holidays = events, fit = FALSE)
 south_best <- add_country_holidays(south_best, country_name = 'US')
 south_best_prophet <- fit.prophet(south_best, south_train)
 
 # West
-# holiday and seasonality
-west_best <- prophet(west_train, yearly.seasonality = FALSE, weekly.seasonality = FALSE, holidays = events, fit = FALSE)
+# holiday changepoints and seasonality
+west_best <- prophet(west_train, yearly.seasonality = FALSE, weekly.seasonality = TRUE, holidays = events, n.changepoints = 1,  fit = FALSE)
 west_best <- add_country_holidays(west_best, country_name = 'US')
 west_best_prophet <- fit.prophet(west_best, west_train)
 ```
 ### 7.2 Forecast Best Models
 ```{r}
 ### Forecast Future Predictions ----
-total_best_future <- make_future_dataframe(total_best_prophet, periods = nrow(total_test), freq = "day")
-total_best_forecast <- predict(total_best_prophet, total_best_future)
+# total_best_future <- make_future_dataframe(total_best_prophet, periods = nrow(total_test), freq = "day")
+# total_best_forecast <- predict(total_best_prophet, total_best_future)
 
 ### East ----
 east_best_future <- make_future_dataframe(east_best_prophet, periods = nrow(east_test), freq = "day")
 east_best_forecast <- predict(east_best_prophet, east_best_future)
+east_forecast2 <- east_best_forecast %>% 
+  filter(ds >=  as.POSIXct("2022-11-29"))
+
+performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
+  select(ds, y, yhat)
 
 ### Midwest ----
 midwest_best_future <- make_future_dataframe(midwest_best_prophet, periods = nrow(midwest_test), freq = "day")
@@ -1011,20 +1185,20 @@ west_best_forecast <- predict(west_best_prophet, west_best_future)
 
 ### 7.3 Best Models Plot
 ```{r}
-total_best_prophet_plot <- plot(total_best_prophet, total_best_forecast) +
-  geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
-  theme_minimal() +
-  labs(title = "Total best Univariate Prophet",
-       x = "Date",
-       y = "Daily Deaths")
-
-total_best_prophet_plot
-
-prophet_plot_components(total_best_prophet, total_best_forecast) 
+# total_best_prophet_plot <- plot(total_best_prophet, total_best_forecast) +
+#   geom_point(data = total_test, aes(x = as.POSIXct.Date(ds), y = y), alpha = 0.2) +
+#   theme_minimal() +
+#   labs(title = "Total best Univariate Prophet",
+#        x = "Date",
+#        y = "Daily Deaths")
+# 
+# total_best_prophet_plot
+# 
+# prophet_plot_components(total_best_prophet, total_best_forecast) 
 
 east_best_prophet_plot <- plot(east_best_prophet, east_best_forecast) +
   theme_minimal() +
-  labs(title = "East best Univariate Prophet",
+  labs(title = "East Best Univariate Prophet",
        x = "Date",
        y = "Daily Deaths")
 
@@ -1034,7 +1208,7 @@ prophet_plot_components(east_best_prophet, east_best_forecast)
 
 midwest_best_prophet_plot <- plot(midwest_best_prophet, midwest_best_forecast) +
   theme_minimal() +
-  labs(title = "Midwest best Univariate Prophet",
+  labs(title = "Midwest Best Univariate Prophet",
        x = "Date",
        y = "Daily Deaths")
 
@@ -1044,7 +1218,7 @@ prophet_plot_components(midwest_best_prophet, midwest_best_forecast)
 
 south_best_prophet_plot <- plot(south_best_prophet, south_best_forecast) +
   theme_minimal() +
-  labs(title = "South best Univariate Prophet",
+  labs(title = "South Best Univariate Prophet",
        x = "Date",
        y = "Daily Deaths")
 
@@ -1054,7 +1228,7 @@ prophet_plot_components(south_best_prophet, south_best_forecast)
 
 west_best_prophet_plot <- plot(west_best_prophet, west_best_forecast) +
   theme_minimal() +
-  labs(title = "West best Univariate Prophet",
+  labs(title = "West Best Univariate Prophet",
        x = "Date",
        y = "Daily Deaths")
 
@@ -1067,19 +1241,19 @@ prophet_plot_components(west_best_prophet, west_best_forecast)
 ### 7.4 Best Models Accuracy
 ```{r}
 ## Total Prophet ----------------------------------------------------------------
-total_forecast2 <- total_best_forecast %>% 
-  filter(ds >=  as.POSIXct("2022-08-07"))
-
-performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
-
-# Check MAE value
-total_best_mae <- mae(performance_total$y, performance_total$yhat)
-print(paste("The MAE for the total model is", total_best_mae))
-
-# Check MASE value
-total_best_mase <- mase(performance_total$y, performance_total$yhat)
-print(paste("The MASE for the total model is", total_best_mase))
+# total_forecast2 <- total_best_forecast %>% 
+#   filter(ds >=  as.POSIXct("2022-08-07"))
+# 
+# performance_total <- full_join(total_test, total_forecast2, by = join_by(ds == ds)) %>% 
+#   select(ds, y, yhat)
+# 
+# # Check MAE value
+# total_best_mae <- mae(performance_total$y, performance_total$yhat)
+# print(paste("The MAE for the total model is", total_best_mae))
+# 
+# # Check MASE value
+# total_best_mase <- mase(performance_total$y, performance_total$yhat)
+# print(paste("The MASE for the total model is", total_best_mase))
 ```
 
 #### East
@@ -1089,7 +1263,19 @@ east_forecast2 <- east_best_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_east <- full_join(east_test, east_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+east_best_proph_test <- performance_east %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
+
+east_best_proph_test
 
 # Check MAE value
 east_best_prophet_mae <- mae(performance_east$y, performance_east$yhat)
@@ -1108,7 +1294,18 @@ midwest_forecast2 <- midwest_best_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_midwest <- full_join(midwest_test, midwest_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+midwest_best_proph_test <- performance_midwest %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
+midwest_best_proph_test
 
 # Check MAE value
 midwest_best_prophet_mae<- mae(performance_midwest$y, performance_midwest$yhat)
@@ -1126,7 +1323,19 @@ south_forecast2 <- south_best_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_south <- full_join(south_test, south_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+south_best_proph_test <- performance_south %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
+
+south_best_proph_test
 
 # Check MAE value
 south_best_prophet_mae<- mae(performance_south$y, performance_south$yhat)
@@ -1144,7 +1353,18 @@ west_forecast2 <- west_best_forecast %>%
   filter(ds >=  as.POSIXct("2022-11-29"))
 
 performance_west <- full_join(west_test, west_forecast2, by = join_by(ds == ds)) %>% 
-  select(ds, y, yhat)
+  select(ds, y, yhat) %>% 
+  mutate(yhat = case_when((yhat < 0) ~ 0,
+                       .default = yhat))
+
+west_best_proph_test <- performance_west %>% 
+  ggplot() +
+  geom_line(aes(x = ds, y = y, color = "dodgerblue"), linewidth = 1) +
+  geom_line(aes(x = ds, y = yhat, color = "orange"), linewidth = 1) +
+  scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
+  theme_bw() +
+  theme(legend.title = element_blank()) 
+west_best_proph_test
 
 # Check MAE value
 west_best_prophet_mae<- mae(performance_west$y, performance_west$yhat)
@@ -1158,11 +1378,12 @@ print(paste("The MASE for the West model is", west_best_prophet_mase))
 
 ```{r eval = FALSE}
 # saving best
-save(east_best_prophet_mase, east_best_prophet_mae, east_best_prophet_plot,
+save(east_season_prophet_mase, east_season_prophet_mae, east_best_proph_test,
      midwest_best_prophet_mase, midwest_best_prophet_mae, midwest_best_prophet_plot,
-     south_season_prophet_mae, south_season_prophet_mase, south_season_prophet_plot,
+     south_best_prophet_mae, south_best_prophet_mase, south_best_prophet_plot,
      west_best_prophet_mase, west_best_prophet_mae, west_best_prophet_plot,
      total_best_mae, total_best_mase, total_best_prophet_plot,
+     season_east_plot, midwest_best_proph_test, south_best_proph_test, west_best_proph_test,
      file = "results/univariate_prophet.rda"
      )
 

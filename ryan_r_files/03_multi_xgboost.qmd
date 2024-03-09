@@ -1,5 +1,5 @@
 ---
-title: "Mulivariate XGBoost Model"
+title: "Multivariate XGBoost Model"
 subtitle: "Predicting COVID-19 Deaths (STAT 390)" 
 author: "Ryan Nguyen"
 
@@ -163,14 +163,15 @@ xgtest_predictions <-cbind(xgb_pred, test_data) %>%
 
 xgplot <- xgtest_predictions %>% 
   ggplot() +
-  geom_line(aes(x = index, y = fitted, color = "blue")) +
+  geom_line(aes(x = index, y = fitted, color = "orange")) +
   #geom_point(aes(x = index, y = fitted, color = "blue"), alpha = 0.2) +
-  geom_line(aes(x = index, y = covid_19_deaths, color = "red"), alpha = 0.7) +
+  geom_line(aes(x = index, y = covid_19_deaths, color = "dodgerblue")) +
   #geom_point(aes(x = index, y = covid_19_deaths, color = "red"), alpha = 0.2) +
-  scale_color_manual(name="Value", values = c("blue", "red"), labels = c("Predicted", "Actual")) +
+  scale_color_manual(name="Value", values = c("orange", "dodgerblue"), labels = c("Predicted", "Actual")) +
   labs(title = "XGBoost Forecast", 
        y = "Deaths") + 
-  coord_fixed(ratio = .3)
+  coord_fixed(ratio = .3) +
+  theme_bw()
 
 xgplot
 ```

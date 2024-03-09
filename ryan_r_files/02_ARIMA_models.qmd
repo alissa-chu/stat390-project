@@ -31,6 +31,8 @@ library(kableExtra)
 library(modeltime)
 library(timetk)
 library(cowplot)
+library(Metrics)
+
 
 # setting the seed
 set.seed(123)
@@ -149,62 +151,62 @@ print(adf_east) # p-value is 0.01 < 0.05, implying it is stationary
 
 adf_midwest <- adf.test(midwest_ts)
 print(adf_midwest) # p-value is 0.325 > 0.05, implying it is NOT stationary
-midwest_ts <- diff(midwest_ts)
-adf_midwest <- adf.test(midwest_ts)
-print(adf_midwest) # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
+diff_midwest_ts <- diff(midwest_ts)
+diff_adf_midwest <- adf.test(diff_midwest_ts)
+print(diff_adf_midwest) # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
 
 adf_south <- adf.test(south_ts)
 print(adf_south) # p-value is 0.3018 > 0.05, implying it is NOT stationary
-south_ts <- diff(south_ts)
-adf_south <- adf.test(south_ts)
-print(adf_south) # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
+diff_south_ts <- diff(south_ts)
+diff_adf_south <- adf.test(diff_south_ts)
+print(diff_adf_south) # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
 
 adf_west <- adf.test(west_ts)
 print(adf_west) # p-value is 0.4098 > 0.05, implying it is NOT stationary
-west_ts <- diff(west_ts)
-adf_west <- adf.test(west_ts)
-print(adf_west)  # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
+diff_west_ts <- diff(west_ts)
+diff_adf_west <- adf.test(diff_west_ts)
+print(diff_adf_west)  # p-value is 0.01 < 0.05, implying it is stationary with 1 diff
 
 
 ### Making Testing/Training Stationary -----------------------------------------
-midwest_train_ts <- diff(midwest_train_ts)
-midwest_test_ts <- diff(midwest_test_ts)
+# midwest_train_ts <- diff(midwest_train_ts)
+# midwest_test_ts <- diff(midwest_test_ts)
 
-midwest_train_ts <- as.data.frame(midwest_train_ts) %>% 
-  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
-                                  .default = daily_deaths))
-midwest_test_ts <- as.data.frame(midwest_test_ts) %>% 
-  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
-                                  .default = daily_deaths))
+# midwest_train_ts <- as.data.frame(midwest_train_ts) %>% 
+#   mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+#                                   .default = daily_deaths))
+# midwest_test_ts <- as.data.frame(midwest_test_ts) %>% 
+#   mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+#                                   .default = daily_deaths))
+# 
+# midwest_train_ts <- ts(midwest_train_ts)
+# midwest_test_ts <- ts(midwest_test_ts)
 
-midwest_train_ts <- ts(midwest_train_ts)
-midwest_test_ts <- ts(midwest_test_ts)
+# south_train_ts <- diff(south_train_ts)
+# south_test_ts <- diff(south_test_ts)
 
-south_train_ts <- diff(south_train_ts)
-south_test_ts <- diff(south_test_ts)
+# south_train_ts <- as.data.frame(south_train_ts) %>% 
+#   mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+#                                   .default = daily_deaths))
+# south_test_ts <- as.data.frame(south_test_ts) %>% 
+#   mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+#                                   .default = daily_deaths))
+# 
+# south_train_ts <- ts(south_train_ts)
+# south_test_ts <- ts(south_test_ts)
 
-south_train_ts <- as.data.frame(south_train_ts) %>% 
-  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
-                                  .default = daily_deaths))
-south_test_ts <- as.data.frame(south_test_ts) %>% 
-  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
-                                  .default = daily_deaths))
+# west_train_ts <- diff(west_train_ts)
+# west_test_ts <- diff(west_test_ts)
 
-south_train_ts <- ts(south_train_ts)
-south_test_ts <- ts(south_test_ts)
-
-west_train_ts <- diff(west_train_ts)
-west_test_ts <- diff(west_test_ts)
-
-west_train_ts <- as.data.frame(west_train_ts) %>% 
-  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
-                                  .default = daily_deaths))
-west_test_ts <- as.data.frame(west_test_ts) %>% 
-  mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
-                                  .default = daily_deaths))
-
-west_train_ts <- ts(west_train_ts)
-west_test_ts <- ts(west_test_ts)
+# west_train_ts <- as.data.frame(west_train_ts) %>% 
+#   mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+#                                   .default = daily_deaths))
+# west_test_ts <- as.data.frame(west_test_ts) %>% 
+#   mutate(daily_deaths = case_when((daily_deaths < 0) ~ 0,
+#                                   .default = daily_deaths))
+# 
+# west_train_ts <- ts(west_train_ts)
+# west_test_ts <- ts(west_test_ts)
 ```
 ## 4. ACF & PACF Plots
 ```{r}
@@ -313,10 +315,10 @@ plot(decomposed_west$random, main = "Residual Component", ylab = "Value", col = 
 ### 6.1 Initial Model
 ```{r}
 # Building ARIMA Model ---------------------------------------------------------
-east_arima <- arima(east_train_ts, order=c(1,0,1))
-midwest_arima <- arima(midwest_train_ts, order=c(1,1,1))
-south_arima <- arima(south_train_ts, order=c(1,1,1))
-west_arima <- arima(west_train_ts, order=c(1,1,1))
+east_arima <- arima(east_train_ts, order=c(5,1,2))
+midwest_arima <- arima(midwest_train_ts, order=c(7,1,0))
+south_arima <- arima(south_train_ts, order=c(7,1,0))
+west_arima <- arima(west_train_ts, order=c(7,1,0))
 
 ## Summary & Forecast ---------------------------------------------------------
 summary(east_arima)
@@ -338,13 +340,13 @@ east_test_plot <- as.data.frame(east_test_ts) %>%
   mutate(num = seq(1023, (1023+113)))
 
 midwest_test_plot <- as.data.frame(midwest_test_ts) %>% 
-  mutate(num = seq(1023, (1023+112)))
+  mutate(num = seq(1023, (1023+113)))
 
 south_test_plot <- as.data.frame(south_test_ts) %>% 
-  mutate(num = seq(1023, (1023+112)))
+  mutate(num = seq(1023, (1023+113)))
 
 west_test_plot <- as.data.frame(west_test_ts) %>% 
-  mutate(num = seq(1023, (1023+112)))
+  mutate(num = seq(1023, (1023+113)))
 
 ```
 
@@ -352,13 +354,16 @@ west_test_plot <- as.data.frame(west_test_ts) %>%
 ## Evaluating Accuracy ---------------------------------------------------------
 east_initial_arima_acc <- forecast::accuracy(east_values)
 
-east_initial_arima_acc %>% 
-  kbl(caption = "<center>Initial East Accuracy<center>") %>% 
-  kable_styling()
+# east_initial_arima_acc %>% 
+#   kbl(caption = "<center>Initial East Accuracy<center>") %>% 
+#   kable_styling()
 
 east_pred <- as.data.frame(east_values$mean)
 
 east_pred2 <- cbind(east_pred, east_test_plot)
+
+east_initial_arima_mae <-mae(east_pred2$daily_deaths, east_pred2$x)
+east_initial_arima_mase <-mase(east_pred2$daily_deaths, east_pred2$x)
 
 ### East Region
 east_initial_arima_plot <-ggplot(east_pred2) +
@@ -379,13 +384,15 @@ east_initial_arima_plot
 
 midwest_initial_arima_acc <- forecast::accuracy(midwest_values)
 
-midwest_initial_arima_acc %>% 
-  kbl(caption = "<center>Initial Midwest Accuracy<center>") %>% 
-  kable_styling()
+# midwest_initial_arima_acc %>% 
+#   kbl(caption = "<center>Initial Midwest Accuracy<center>") %>% 
+#   kable_styling()
 
 midwest_pred <- as.data.frame(midwest_values$mean)
 
 midwest_pred2 <- cbind(midwest_pred, midwest_test_plot)
+midwest_initial_arima_mae <-mae(midwest_pred2$daily_deaths, midwest_pred2$x)
+midwest_initial_arima_mase <-mase(midwest_pred2$daily_deaths, midwest_pred2$x)
 
 midwest_initial_arima_plot <-ggplot(midwest_pred2) +
   geom_line(aes(x = num, y = daily_deaths), color = "dodgerblue", linewidth = .75) +
@@ -411,8 +418,10 @@ south_initial_arima_acc %>%
   kable_styling()
 
 south_pred <- as.data.frame(south_values$mean)
-
 south_pred2 <- cbind(south_pred, south_test_plot)
+south_initial_arima_mae <-mae(south_pred2$daily_deaths, south_pred2$x)
+south_initial_arima_mase <-mase(south_pred2$daily_deaths, east_pred2$x)
+
 south_initial_arima_plot <-ggplot(south_pred2) +
   geom_line(aes(x = num, y = daily_deaths), color = "dodgerblue", linewidth = .75) +
   geom_line(aes(x = num, y = x), color = "orange", linewidth = .75) +
@@ -432,13 +441,15 @@ south_initial_arima_plot
 
 west_initial_arima_acc <- forecast::accuracy(west_values)
 
-west_initial_arima_acc %>% 
-  kbl(caption = "<center>Initial West Accuracy<center>") %>% 
-  kable_styling()
+# west_initial_arima_acc %>% 
+#   kbl(caption = "<center>Initial West Accuracy<center>") %>% 
+#   kable_styling()
 
 west_pred <- as.data.frame(west_values$mean)
 
 west_pred2 <- cbind(west_pred, west_test_plot)
+west_initial_arima_mae <-mae(west_pred2$daily_deaths, west_pred2$x)
+west_initial_arima_mase <-mase(west_pred2$daily_deaths, west_pred2$x)
 
 west_initial_arima_plot <-ggplot(west_pred2) +
   geom_line(aes(x = num, y = daily_deaths), color = "dodgerblue", linewidth = .75) +
@@ -461,9 +472,9 @@ west_initial_arima_plot
 
 # Grid Search for p and q ------------------------------------------------------
 
-p_values <- 0:5  # AR order
+p_values <- 0:8  # AR order
 d_values <- 0:0  # I order
-q_values <- 0:5  # MA order
+q_values <- 0:8  # MA order
 
 ## East - Perform grid search for ARIMA parameters  ----------------------------
 best_east_model <- NULL
@@ -502,9 +513,9 @@ for (p in p_values) {
 
 ```{r eval = FALSE}
 ## Midwest - Perform grid search for ARIMA parameters  -------------------------
-p_values <- 0:5  # AR order
-d_values <- 0:1  # I order
-q_values <- 0:5  # MA order
+p_values <- 0:8  # AR order
+d_values <- 1  # I order
+q_values <- 0:8  # MA order
 
 best_midwest_model <- NULL
 best_midwest_aic <- Inf
@@ -542,9 +553,9 @@ for (p in p_values) {
 ```{r eval = FALSE}
 
 ## South - Perform grid search for ARIMA parameters  ---------------------------
-p_values <- 0:5  # AR order
-d_values <- 0:1  # I order
-q_values <- 0:5  # MA order
+p_values <- 0:8  # AR order
+d_values <- 1  # I order
+q_values <- 0:8  # MA order
 
 best_south_model <- NULL
 best_south_aic <- Inf
@@ -581,9 +592,9 @@ for (p in p_values) {
 ```{r eval = FALSE}
 
 ## West - Perform grid search for ARIMA parameters  ----------------------------
-p_values <- 0:5  # AR order
-d_values <- 0:1  # I order
-q_values <- 0:5  # MA order
+p_values <- 0:8  # AR order
+d_values <- 1  # I order
+q_values <- 0:8  # MA order
 
 best_west_model <- NULL
 best_west_aic <- Inf
@@ -656,10 +667,10 @@ print(best_west_model)
 ### 6.4 Rebuilding ARIMA Model
 ```{r}
 # Rebuilding ARIMA Models ------------------------------------------------------
-east_arima <- arima(east_train_ts, order=c(5,0,5))
-midwest_arima <- arima(midwest_train_ts, order=c(5,1,5))
-south_arima <- arima(south_train_ts, order=c(5,1,5))
-west_arima <- arima(west_train_ts, order=c(5,1,5), method = "ML")
+east_arima <- arima(east_train_ts, order=c(7,0,7))
+midwest_arima <- arima(midwest_train_ts, order=c(8,1,8))
+south_arima <- arima(south_train_ts, order=c(6,1,7))
+west_arima <- arima(west_train_ts, order=c(8,1,8))
 
 
 east_values <- forecast(east_arima, h = length(east_test_ts))
@@ -671,13 +682,14 @@ west_values <- forecast(west_arima, h = length(west_test_ts))
 
 east_tuned_arima_acc <- forecast::accuracy(east_values)
 
-east_tuned_arima_acc %>% 
-  kbl(caption = "<center>Tuned East Accuracy<center>") %>% 
-  kable_styling()
+# east_tuned_arima_acc %>% 
+#   kbl(caption = "<center>Tuned East Accuracy<center>") %>% 
+#   kable_styling()
 
 east_pred <- as.data.frame(east_values$mean)
-
 east_pred2 <- cbind(east_pred, east_test_plot)
+east_tuned_arima_mae <-mae(east_pred2$daily_deaths, east_pred2$x)
+east_tuned_arima_mase <-mase(east_pred2$daily_deaths, east_pred2$x)
 
 ### East Region
 east_tuned_arima_plot <-ggplot(east_pred2) +
@@ -694,22 +706,27 @@ east_tuned_arima_plot <-ggplot(east_pred2) +
   theme(legend.title = element_blank())
 
 east_tuned_arima_plot
+```
 
+
+```{r}
 ### Midwest Region
 
 midwest_tuned_arima_acc <- forecast::accuracy(midwest_values)
 
-midwest_tuned_arima_acc %>% 
-  kbl(caption = "<center>Tuned Midwest Accuracy<center>") %>% 
-  kable_styling()
+# midwest_tuned_arima_acc %>% 
+#   kbl(caption = "<center>Tuned Midwest Accuracy<center>") %>% 
+#   kable_styling()
 
 midwest_pred <- as.data.frame(midwest_values$mean)
 
 midwest_pred2 <- cbind(midwest_pred, midwest_test_plot)
+midwest_tuned_arima_mae <-mae(midwest_pred2$daily_deaths, midwest_pred2$x)
+midwest_tuned_arima_mase <-mase(midwest_pred2$daily_deaths, midwest_pred2$x)
 
-midwest_pred2 <- midwest_pred2 %>% 
-  mutate(x = case_when((x < 0) ~ 0,
-                       .default = x))
+# midwest_pred2 <- midwest_pred2 %>% 
+#   mutate(x = case_when((x < 0) ~ 0,
+#                        .default = x))
 
 midwest_tuned_arima_plot <-ggplot(midwest_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -730,17 +747,19 @@ midwest_tuned_arima_plot
 
 south_tuned_arima_acc <- forecast::accuracy(south_values)
 
-south_tuned_arima_acc %>% 
-  kbl(caption = "<center>Tuned South Accuracy<center>") %>% 
-  kable_styling()
+# south_tuned_arima_acc %>% 
+#   kbl(caption = "<center>Tuned South Accuracy<center>") %>% 
+#   kable_styling()
 
 south_pred <- as.data.frame(south_values$mean)
 
 south_pred2 <- cbind(south_pred, south_test_plot)
+south_tuned_arima_mae <-mae(south_pred2$daily_deaths, south_pred2$x)
+south_tuned_arima_mase <-mase(south_pred2$daily_deaths, south_pred2$x)
 
-south_pred2 <- south_pred2 %>% 
-  mutate(x = case_when((x < 0) ~ 0,
-                       .default = x))
+# south_pred2 <- south_pred2 %>% 
+#   mutate(x = case_when((x < 0) ~ 0,
+#                        .default = x))
 
 south_tuned_arima_plot <-ggplot(south_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -761,17 +780,19 @@ south_tuned_arima_plot
 ### West Region
 west_tuned_arima_acc <- forecast::accuracy(west_values)
 
-west_tuned_arima_acc %>% 
-  kbl(caption = "<center>Tuned West Accuracy<center>") %>% 
-  kable_styling()
+# west_tuned_arima_acc %>% 
+#   kbl(caption = "<center>Tuned West Accuracy<center>") %>% 
+#   kable_styling()
 
 west_pred <- as.data.frame(west_values$mean)
 
 west_pred2 <- cbind(west_pred, west_test_plot)
+west_tuned_arima_mae <-mae(west_pred2$daily_deaths, west_pred2$x)
+west_tuned_arima_mase <-mase(west_pred2$daily_deaths, west_pred2$x)
 
-west_pred2 <- west_pred2 %>% 
-  mutate(x = case_when((x < 0) ~ 0,
-                       .default = x))
+# west_pred2 <- west_pred2 %>% 
+#   mutate(x = case_when((x < 0) ~ 0,
+#                        .default = x))
 
 west_tuned_arima_plot <-ggplot(west_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -796,6 +817,10 @@ save(east_tuned_arima_acc, east_initial_arima_acc, east_initial_arima_plot, east
      midwest_tuned_arima_acc, midwest_initial_arima_acc, midwest_initial_arima_plot,midwest_tuned_arima_plot,
      south_tuned_arima_acc, south_initial_arima_acc, south_initial_arima_plot, south_tuned_arima_plot,
      west_tuned_arima_acc, west_initial_arima_acc, west_initial_arima_plot, west_tuned_arima_plot,
+     east_initial_arima_mae, east_initial_arima_mase, east_tuned_arima_mae, east_tuned_arima_mase,
+     midwest_initial_arima_mae, midwest_initial_arima_mase, midwest_tuned_arima_mae, midwest_tuned_arima_mase,
+     south_initial_arima_mae, south_initial_arima_mase, south_tuned_arima_mae, south_tuned_arima_mase,
+     west_initial_arima_mae, west_initial_arima_mase, west_tuned_arima_mae, west_tuned_arima_mase,
      file = "results/uni_arima.rda"
      )
 ```
@@ -806,10 +831,10 @@ save(east_tuned_arima_acc, east_initial_arima_acc, east_initial_arima_plot, east
 ### 7.1 Initial SARIMA Model
 ```{r}
 # Building SARIMA model  ------------------------------------------------------
-east_sarima <- arima(east_train_ts, seasonal = list(order = c(1,1,1)))
-midwest_sarima <- arima(midwest_train_ts, seasonal = list(order = c(1,1,1)))
-south_sarima <- arima(south_train_ts, seasonal = list(order = c(1,1,1)))
-west_sarima <- arima(west_train_ts, seasonal = list(order = c(1,1,1)))
+east_sarima <- arima(east_train_ts, order = c(7,0,7), seasonal = list(order = c(1,0,1)))
+midwest_sarima <- arima(midwest_train_ts, order = c(8,1,8), seasonal = list(order = c(1,1,1)))
+south_sarima <- arima(south_train_ts, order = c(6,1,7), seasonal = list(order = c(1,1,1)))
+west_sarima <- arima(west_train_ts, order = c(8,1,8), seasonal = list(order = c(1,1,1)))
 
 # Summary of the SARIMA model
 summary(east_sarima)
@@ -832,13 +857,15 @@ west_values <- forecast(west_sarima, h = length(west_test_ts))
 ## East Region
 east_initial_sarima_acc <- forecast::accuracy(east_values)
 
-east_initial_sarima_acc %>% 
-  kbl(caption = "<center>Initial SARIMA East Accuracy<center>") %>% 
-  kable_styling()
+# east_initial_sarima_acc %>% 
+#   kbl(caption = "<center>Initial SARIMA East Accuracy<center>") %>% 
+#   kable_styling()
 
 east_pred <- as.data.frame(east_values$mean)
 
 east_pred2 <- cbind(east_pred, east_test_plot)
+east_initial_sarima_mae <-mae(east_pred2$daily_deaths, east_pred2$x)
+east_initial_sarima_mase <-mase(east_pred2$daily_deaths, east_pred2$x)
 
 ### East Region
 east_initial_sarima_plot <-ggplot(east_pred2) +
@@ -861,9 +888,9 @@ east_initial_sarima_plot
 
 midwest_initial_sarima_acc <- forecast::accuracy(midwest_values)
 
-midwest_initial_sarima_acc %>% 
-  kbl(caption = "<center>Initial SARIMA Midwest Accuracy<center>") %>% 
-  kable_styling()
+# midwest_initial_sarima_acc %>% 
+#   kbl(caption = "<center>Initial SARIMA Midwest Accuracy<center>") %>% 
+#   kable_styling()
 
 midwest_pred <- as.data.frame(midwest_values$mean)
 
@@ -872,6 +899,9 @@ midwest_pred2 <- cbind(midwest_pred, midwest_test_plot)
 midwest_pred2 <- midwest_pred2 %>% 
   mutate(x = case_when((x < 0) ~ 0,
                        .default = x))
+
+midwest_initial_sarima_mae <-mae(midwest_pred2$daily_deaths, midwest_pred2$x)
+midwest_initial_sarima_mase <-mase(midwest_pred2$daily_deaths, midwest_pred2$x)
 
 midwest_initial_sarima_plot <-ggplot(midwest_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -893,9 +923,9 @@ midwest_initial_sarima_plot
 ## South Region
 south_initial_sarima_acc <- forecast::accuracy(south_values)
 
-south_initial_sarima_acc %>%
-  kbl(caption = "<center>Initial SARIMA South Accuracy<center>") %>%
-  kable_styling()
+# south_initial_sarima_acc %>%
+#   kbl(caption = "<center>Initial SARIMA South Accuracy<center>") %>%
+#   kable_styling()
 
 south_pred <- as.data.frame(south_values$mean)
 
@@ -905,13 +935,16 @@ south_pred2 <- south_pred2 %>%
   mutate(x = case_when((x < 0) ~ 0,
                        .default = x))
 
+south_initial_sarima_mae <-mae(south_pred2$daily_deaths, south_pred2$x)
+south_initial_sarima_mase <-mase(south_pred2$daily_deaths, south_pred2$x)
+
 south_initial_sarima_plot <-ggplot(south_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
   geom_line(aes(x = num, y = x, color = "orange"), linewidth = .75) +
   scale_x_continuous(limits = c(1023,1136),
                      breaks = c(1023, 1069, 1115),
                      labels = c("Dec 2022", "Jan 2023", "March 2023")) +
-  labs(title = "South Region Initial SsARIMA",
+  labs(title = "South Region Initial SARIMA",
        y = NULL,
        x = NULL) +
   scale_color_manual(values = c("dodgerblue", "orange"), labels = c("Actual", "Predicted")) +
@@ -926,17 +959,20 @@ south_initial_sarima_plot
 
 west_initial_sarima_acc <- forecast::accuracy(west_values)
 
-west_initial_sarima_acc %>% 
-  kbl(caption = "<center>Initial SARIMA West Accuracy<center>") %>% 
-  kable_styling()
+# west_initial_sarima_acc %>% 
+#   kbl(caption = "<center>Initial SARIMA West Accuracy<center>") %>% 
+#   kable_styling()
 
 west_pred <- as.data.frame(west_values$mean)
 
 west_pred2 <- cbind(west_pred, west_test_plot)
 
-west_pred2 <- west_pred2 %>% 
-  mutate(x = case_when((x < 0) ~ 0,
-                       .default = x))
+# west_pred2 <- west_pred2 %>% 
+#   mutate(x = case_when((x < 0) ~ 0,
+#                        .default = x))
+
+west_initial_sarima_mae <-mae(west_pred2$daily_deaths, west_pred2$x)
+west_initial_sarima_mase <-mase(west_pred2$daily_deaths, west_pred2$x)
 
 west_initial_sarima_plot <-ggplot(west_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -959,9 +995,9 @@ west_initial_sarima_plot
 ### 7.3 Grid Search
 ```{r eval = FALSE}
 ## Define the parameter grids --------------------------------------------------
-p_grid <- 0:5  # AR parameter
+p_grid <- 0:6  # AR parameter
 d_grid <- 0:0  # Differencing parameter
-q_grid <- 0:5  # MA parameter
+q_grid <- 0:6  # MA parameter
 P_grid <- 0:1  # Seasonal AR parameter
 D_grid <- 0:0  # Seasonal differencing parameter
 Q_grid <- 0:1  # Seasonal MA parameter
@@ -1174,14 +1210,14 @@ print(best_west_model)
 ### 7.4 Rebuilding SARIMA
 ```{r}
 # Rebuilding SARIMA Models -----------------------------------------------------
-east_sarima <- arima(east_train_ts, order = c(5, 0, 4), 
-                     seasonal = list(order = c(1, 1, 1), period = 7))
-midwest_sarima <- arima(midwest_train_ts, order = c(5, 1, 5),
-                        seasonal = list(order = c(1, 1, 0), period = 7))
-south_sarima <- arima(south_train_ts, order = c(5, 1, 5),
-                           seasonal = list(order = c(1, 1, 1), period = 7))
-west_sarima <- arima(west_train_ts, order = c(0, 1, 3),
-                     seasonal = list(order = c(1, 1, 1), period = 7))
+east_sarima <- arima(east_train_ts, order = c(4, 0, 6), 
+                     seasonal = list(order = c(1, 0, 0), period = 7))
+midwest_sarima <- arima(midwest_train_ts, order = c(3, 1, 6),
+                        seasonal = list(order = c(0, 1, 1), period = 7))
+south_sarima <- arima(south_train_ts, order = c(5, 1, 6),
+                           seasonal = list(order = c(1, 1, 0), period = 7))
+west_sarima <- arima(west_train_ts, order = c(6, 1, 5),
+                     seasonal = list(order = c(0, 1, 1), period = 7))
 
 
 ## Forecasting with the NEW SARIMA model ---------------------------------------
@@ -1197,14 +1233,15 @@ west_values <- forecast(west_sarima, h = length(west_test_ts))
 ## East Region
 east_tuned_sarima_acc <- forecast::accuracy(east_values)
 
-east_tuned_sarima_acc %>% 
-  kbl(caption = "<center>Tuned SARIMA East Accuracy<center>") %>% 
-  kable_styling()
+# east_tuned_sarima_acc %>% 
+#   kbl(caption = "<center>Tuned SARIMA East Accuracy<center>") %>% 
+#   kable_styling()
 
 east_pred <- as.data.frame(east_values$mean)
 
 east_pred2 <- cbind(east_pred, east_test_plot)
-
+east_tuned_sarima_mae <-mae(east_pred2$daily_deaths, east_pred2$x)
+east_tuned_sarima_mase <-mase(east_pred2$daily_deaths, east_pred2$x)
 
 ### East Region
 east_tuned_sarima_plot <-ggplot(east_pred2) +
@@ -1227,17 +1264,17 @@ east_tuned_sarima_plot
 
 midwest_tuned_sarima_acc <- forecast::accuracy(midwest_values)
 
-midwest_tuned_sarima_acc %>% 
-  kbl(caption = "<center>Tuned SARIMA Midwest Accuracy<center>") %>% 
-  kable_styling()
+# midwest_tuned_sarima_acc %>% 
+#   kbl(caption = "<center>Tuned SARIMA Midwest Accuracy<center>") %>% 
+#   kable_styling()
 
 midwest_pred <- as.data.frame(midwest_values$mean)
-
 midwest_pred2 <- cbind(midwest_pred, midwest_test_plot)
-
 midwest_pred2 <- midwest_pred2 %>% 
-  mutate(x = case_when((x < 0) ~ 0,
-                       .default = x))
+   mutate(x = case_when((x < 0) ~ 0,
+                        .default = x))
+midwest_tuned_sarima_mae <-mae(midwest_pred2$daily_deaths, midwest_pred2$x)
+midwest_tuned_sarima_mase <-mase(midwest_pred2$daily_deaths, midwest_pred2$x)
 
 midwest_tuned_sarima_plot <-ggplot(midwest_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -1259,17 +1296,18 @@ midwest_tuned_sarima_plot
 ## South Region
 south_tuned_sarima_acc <- forecast::accuracy(south_values)
 
-south_tuned_sarima_acc %>%
-  kbl(caption = "<center>Tuned SARIMA South Accuracy<center>") %>%
-  kable_styling()
+# south_tuned_sarima_acc %>%
+#   kbl(caption = "<center>Tuned SARIMA South Accuracy<center>") %>%
+#   kable_styling()
 
 south_pred <- as.data.frame(south_values$mean)
 
 south_pred2 <- cbind(south_pred, south_test_plot)
-
-south_pred2 <- south_pred2 %>% 
+south_pred2 <- south_pred2 %>%
   mutate(x = case_when((x < 0) ~ 0,
                        .default = x))
+south_tuned_sarima_mae <-mae(south_pred2$daily_deaths, south_pred2$x)
+south_tuned_sarima_mase <-mase(south_pred2$daily_deaths, south_pred2$x)
 
 south_tuned_sarima_plot <-ggplot(south_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -1292,17 +1330,19 @@ south_tuned_sarima_plot
 
 west_tuned_sarima_acc <- forecast::accuracy(west_values)
 
-west_tuned_sarima_acc %>% 
-  kbl(caption = "<center>Tuned SARIMA West Accuracy<center>") %>% 
-  kable_styling()
+# west_tuned_sarima_acc %>% 
+#   kbl(caption = "<center>Tuned SARIMA West Accuracy<center>") %>% 
+#   kable_styling()
 
 west_pred <- as.data.frame(west_values$mean)
 
 west_pred2 <- cbind(west_pred, west_test_plot)
+west_tuned_sarima_mae <-mae(west_pred2$daily_deaths, west_pred2$x)
+west_tuned_sarima_mase <-mase(west_pred2$daily_deaths, west_pred2$x)
 
-west_pred2 <- west_pred2 %>% 
-  mutate(x = case_when((x < 0) ~ 0,
-                       .default = x))
+# west_pred2 <- west_pred2 %>% 
+#   mutate(x = case_when((x < 0) ~ 0,
+#                        .default = x))
 
 
 west_tuned_sarima_plot <-ggplot(west_pred2) +
@@ -1329,6 +1369,10 @@ save(east_tuned_sarima_acc, east_initial_sarima_acc, east_initial_sarima_plot, e
      midwest_tuned_sarima_acc, midwest_initial_sarima_acc, midwest_initial_sarima_plot, midwest_tuned_sarima_plot,
      south_tuned_sarima_acc, south_initial_sarima_acc, south_initial_sarima_plot, south_tuned_sarima_plot,
      west_tuned_sarima_acc, west_initial_sarima_acc, west_initial_sarima_plot, west_tuned_sarima_plot,
+     east_initial_sarima_mae, east_initial_sarima_mase, east_tuned_sarima_mae, east_tuned_sarima_mase,
+     midwest_initial_sarima_mae, midwest_initial_sarima_mase, midwest_tuned_sarima_mae, midwest_tuned_sarima_mase,
+     south_initial_sarima_mae, south_initial_sarima_mase, south_tuned_sarima_mae, south_tuned_sarima_mase,
+     west_initial_sarima_mae, west_initial_sarima_mase, west_tuned_sarima_mae, west_tuned_sarima_mase,
      file = "results/uni_sarima.rda"
      )
 ```
@@ -1339,7 +1383,7 @@ save(east_tuned_sarima_acc, east_initial_sarima_acc, east_initial_sarima_plot, e
 ### 8.1 Building AutoARIMA
 ```{r}
 # Building AutoARIMA Model -----------------------------------------------------
-east_arima <- auto.arima(east_train_ts, seasonal = TRUE, max.p = 5, max.q = 5, max.P = 5, max.Q = 5)
+east_arima <- auto.arima(east_train_ts, seasonal = TRUE)
 midwest_arima <- auto.arima(midwest_train_ts, seasonal = TRUE)
 south_arima <- auto.arima(south_train_ts, seasonal = TRUE)
 west_arima <- auto.arima(west_train_ts, seasonal = TRUE)
@@ -1365,13 +1409,20 @@ west_values <- forecast(west_arima, h = length(west_test_ts))
 ## East Region
 east_auto_acc <- forecast::accuracy(east_values)
 
-east_auto_acc  %>% 
-  kbl(caption = "<center>Auto ARIMA East Accuracy<center>") %>% 
-  kable_styling()
+# east_auto_acc  %>% 
+#   kbl(caption = "<center>Auto ARIMA East Accuracy<center>") %>% 
+#   kable_styling()
 
 east_pred <- as.data.frame(east_values$mean)
 
 east_pred2 <- cbind(east_pred, east_test_plot)
+east_pred2 <- east_pred2 %>% 
+  mutate(x = case_when((x < 0) ~ 0,
+                       .default = x))
+
+east_auto_mae <-mae(east_pred2$daily_deaths, east_pred2$x)
+east_auto_mase <-mase(east_pred2$daily_deaths, east_pred2$x)
+
 
 east_auto_plot <- ggplot(east_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -1392,9 +1443,9 @@ east_auto_plot
 ## Midwest Region
 midwest_auto_acc <- forecast::accuracy(midwest_values)
 
-midwest_auto_acc %>% 
-  kbl(caption = "<center>Auto ARIMA Midwest Accuracy<center>") %>% 
-  kable_styling()
+# midwest_auto_acc %>% 
+#   kbl(caption = "<center>Auto ARIMA Midwest Accuracy<center>") %>% 
+#   kable_styling()
 
 midwest_pred <- as.data.frame(midwest_values$mean)
 
@@ -1403,6 +1454,8 @@ midwest_pred2 <- cbind(midwest_pred, midwest_test_plot)
 midwest_pred2 <- midwest_pred2 %>% 
   mutate(x = case_when((x < 0) ~ 0,
                        .default = x))
+midwest_auto_mae <-mae(midwest_pred2$daily_deaths, midwest_pred2$x)
+midwest_auto_mase <-mase(midwest_pred2$daily_deaths, midwest_pred2$x)
 
 midwest_auto_plot <-ggplot(midwest_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -1424,9 +1477,9 @@ midwest_auto_plot
 ## South Region
 south_auto_acc <- forecast::accuracy(south_values)
 
-south_auto_acc %>% 
-  kbl(caption = "<center>Auto ARIMA South Accuracy<center>") %>% 
-  kable_styling()
+# south_auto_acc %>% 
+#   kbl(caption = "<center>Auto ARIMA South Accuracy<center>") %>% 
+#   kable_styling()
 
 south_pred <- as.data.frame(south_values$mean)
 
@@ -1435,6 +1488,9 @@ south_pred2 <- cbind(south_pred, south_test_plot)
 south_pred2 <- south_pred2 %>% 
   mutate(x = case_when((x < 0) ~ 0,
                        .default = x))
+
+south_auto_mae <-mae(south_pred2$daily_deaths, south_pred2$x)
+south_auto_mase <-mase(south_pred2$daily_deaths, south_pred2$x)
 
 south_auto_plot <- ggplot(south_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -1456,9 +1512,9 @@ south_auto_plot
 ## West Region
 west_auto_acc <- forecast::accuracy(west_values)
 
-west_auto_acc %>% 
-  kbl(caption = "<center>Auto ARIMA West Accuracy<center>") %>% 
-  kable_styling()
+# west_auto_acc %>% 
+#   kbl(caption = "<center>Auto ARIMA West Accuracy<center>") %>% 
+#   kable_styling()
 
 west_pred <- as.data.frame(west_values$mean)
 
@@ -1467,6 +1523,9 @@ west_pred2 <- cbind(west_pred, west_test_plot)
 west_pred2 <- west_pred2 %>% 
   mutate(x = case_when((x < 0) ~ 0,
                        .default = x))
+
+west_auto_mae <-mae(west_pred2$daily_deaths, west_pred2$x)
+west_auto_mase <-mase(west_pred2$daily_deaths, west_pred2$x)
 
 west_auto_plot <- ggplot(west_pred2) +
   geom_line(aes(x = num, y = daily_deaths, color = "dodgerblue"), linewidth = .75) +
@@ -1495,6 +1554,14 @@ save(east_auto_plot,
      midwest_auto_acc,
      south_auto_acc,
      west_auto_acc,
+     east_auto_mae,
+     east_auto_mase,
+     midwest_auto_mae,
+     midwest_auto_mase,
+     south_auto_mae,
+     south_auto_mase,
+     west_auto_mae,
+     west_auto_mase,
      file = "results/uni_autoarima.rda")
 ```
 
@@ -1508,29 +1575,29 @@ load("results/uni_autoarima.rda")
 
 ### East Results
 ```{r}
-east1 <- east_initial_arima_acc %>% 
-  as.data.frame()
-
-east2 <- east_tuned_arima_acc %>% 
-  as.data.frame()
-
-east3 <- east_initial_sarima_acc%>% 
-  as.data.frame() 
-
-east4 <- east_tuned_sarima_acc%>% 
-  as.data.frame()
-
-east5 <- east_auto_acc%>% 
-  as.data.frame()
+# east1 <- east_initial_arima_acc %>%
+#   as.data.frame()
+# 
+# east2 <- east_tuned_arima_acc %>%
+#   as.data.frame()
+# 
+# east3 <- east_initial_sarima_acc%>%
+#   as.data.frame()
+# 
+# east4 <- east_tuned_sarima_acc%>%
+#   as.data.frame()
+# 
+# east5 <- east_auto_acc%>%
+#   as.data.frame()
 
 tribble(
   ~model, ~mae, ~mase,
   #--|--|----
-  "initial arima", east1$MAE, east1$MASE,
-  "tuned arima", east2$MAE, east2$MASE,
-  "initial sarima", east3$MAE, east3$MASE,
-  "tuned sarima", east4$MAE, east4$MASE,
-  "auto arima", east5$MAE, east5$MASE,
+  "initial arima", east_initial_arima_mae, east_initial_arima_mase,
+  "tuned arima", east_tuned_arima_mae, east_tuned_arima_mase,
+  "initial sarima", east_initial_sarima_mae, east_initial_sarima_mase,
+  "tuned sarima", east_tuned_sarima_mae, east_tuned_sarima_mase,
+  "auto arima", east_auto_mae, east_auto_mase,
 ) %>% 
   kbl() %>% 
   kable_styling()
@@ -1539,29 +1606,29 @@ tribble(
 
 ### Midwest Results
 ```{r}
-midwest1 <- midwest_initial_arima_acc %>% 
-  as.data.frame()
-
-midwest2 <- midwest_tuned_arima_acc %>% 
-  as.data.frame()
-
-midwest3 <- midwest_initial_sarima_acc%>% 
-  as.data.frame() 
-
-midwest4 <- midwest_tuned_sarima_acc%>% 
-  as.data.frame()
-
-midwest5 <- midwest_auto_acc%>% 
-  as.data.frame()
+# midwest1 <- midwest_initial_arima_acc %>% 
+#   as.data.frame()
+# 
+# midwest2 <- midwest_tuned_arima_acc %>% 
+#   as.data.frame()
+# 
+# midwest3 <- midwest_initial_sarima_acc%>% 
+#   as.data.frame() 
+# 
+# midwest4 <- midwest_tuned_sarima_acc%>% 
+#   as.data.frame()
+# 
+# midwest5 <- midwest_auto_acc%>% 
+#   as.data.frame()
 
 tribble(
   ~model, ~mae, ~mase,
   #--|--|----
-  "initial arima", midwest1$MAE, midwest1$MASE,
-  "tuned arima", midwest2$MAE, midwest2$MASE,
-  "initial sarima", midwest3$MAE, midwest3$MASE,
-  "tuned sarima", midwest4$MAE, midwest4$MASE,
-  "auto arima", midwest5$MAE, midwest5$MASE,
+  "initial arima", midwest_initial_arima_mae, midwest_initial_arima_mase,
+  "tuned arima", midwest_tuned_arima_mae, midwest_tuned_arima_mase,
+  "initial sarima", midwest_initial_sarima_mae, midwest_initial_sarima_mase,
+  "tuned sarima", midwest_tuned_sarima_mae, midwest_tuned_sarima_mase,
+  "auto arima", midwest_auto_mae, midwest_auto_mase,
 ) %>% 
   kbl() %>% 
   kable_styling()
@@ -1570,29 +1637,29 @@ tribble(
 
 ### South Results
 ```{r}
-south1 <- south_initial_arima_acc %>% 
-  as.data.frame()
-
-south2 <- south_tuned_arima_acc %>% 
-  as.data.frame()
-
-south3 <- south_initial_sarima_acc%>% 
-  as.data.frame() 
-
-south4 <- south_tuned_sarima_acc%>% 
-  as.data.frame()
-
-south5 <- south_auto_acc%>% 
-  as.data.frame()
+# south1 <- south_initial_arima_acc %>% 
+#   as.data.frame()
+# 
+# south2 <- south_tuned_arima_acc %>% 
+#   as.data.frame()
+# 
+# south3 <- south_initial_sarima_acc%>% 
+#   as.data.frame() 
+# 
+# south4 <- south_tuned_sarima_acc%>% 
+#   as.data.frame()
+# 
+# south5 <- south_auto_acc%>% 
+#   as.data.frame()
 
 tribble(
   ~model, ~mae, ~mase,
   #--|--|----
-  "initial arima", south1$MAE, south1$MASE,
-  "tuned arima", south2$MAE, south2$MASE,
-  "initial sarima", south3$MAE, south3$MASE,
-  "tuned sarima", south4$MAE, south4$MASE,
-  "auto arima", south5$MAE, south5$MASE,
+  "initial arima", south_initial_arima_mae, south_initial_arima_mase,
+  "tuned arima", south_tuned_arima_mae, south_tuned_arima_mase,
+  "initial sarima", south_initial_sarima_mae, south_initial_sarima_mase,
+  "tuned sarima", south_tuned_sarima_mae, south_tuned_sarima_mase,
+  "auto arima", south_auto_mae, south_auto_mase,
 ) %>% 
   kbl() %>% 
   kable_styling()
@@ -1602,32 +1669,31 @@ tribble(
 
 ### West Results
 ```{r}
-west1 <- west_initial_arima_acc %>% 
-  as.data.frame()
-
-west2 <- west_tuned_arima_acc %>% 
-  as.data.frame()
-
-west3 <- west_initial_sarima_acc%>% 
-  as.data.frame() 
-
-west4 <- west_tuned_sarima_acc%>% 
-  as.data.frame()
-
-west5 <- west_auto_acc%>% 
-  as.data.frame()
+# west1 <- west_initial_arima_acc %>% 
+#   as.data.frame()
+# 
+# west2 <- west_tuned_arima_acc %>% 
+#   as.data.frame()
+# 
+# west3 <- west_initial_sarima_acc%>% 
+#   as.data.frame() 
+# 
+# west4 <- west_tuned_sarima_acc%>% 
+#   as.data.frame()
+# 
+# west5 <- west_auto_acc%>% 
+#   as.data.frame()
 
 tribble(
   ~model, ~mae, ~mase,
   #--|--|----
-  "initial arima", west1$MAE, west1$MASE,
-  "tuned arima", west2$MAE, west2$MASE,
-  "initial sarima", west3$MAE, west3$MASE,
-  "tuned sarima", west4$MAE, west4$MASE,
-  "auto arima", west5$MAE, west5$MASE,
+  "initial arima", west_initial_arima_mae, west_initial_arima_mase,
+  "tuned arima", west_tuned_arima_mae, west_tuned_arima_mase,
+  "initial sarima", west_initial_sarima_mae, west_initial_sarima_mase,
+  "tuned sarima", west_tuned_sarima_mae, west_tuned_sarima_mase,
+  "auto arima", west_auto_mae, west_auto_mase,
 ) %>% 
   kbl() %>% 
   kable_styling()
-
 ```
 
